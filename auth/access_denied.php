@@ -8,6 +8,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../includes/auth.php';
 
+// Set HTTP 403 Forbidden status code for search engines and automated security scanners
+http_response_code(403);
+
 $pageTitle = 'Access Denied';
 require_once __DIR__ . '/../includes/header.php';
 ?>
