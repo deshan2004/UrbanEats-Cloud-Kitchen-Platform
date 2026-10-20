@@ -1,3 +1,13 @@
+<?php
+/**
+ * UrbanEats Cloud Kitchen Platform
+ * Shared Global Footer (Component A — Requirement 3)
+ * 
+ * Reusable footer layout used across the entire application by all components.
+ */
+
+declare(strict_types=1);
+?>
     </div><!-- /.container -->
 </main><!-- /#main-content -->
 
