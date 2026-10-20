@@ -44,3 +44,12 @@ function verify_csrf_token(?string $token): bool {
     }
     return hash_equals($_SESSION['csrf_token'], $token);
 }
+
+/**
+ * Backward-compatible alias for legacy calls that expect generate_csrf_token().
+ *
+ * @return string
+ */
+function generate_csrf_token(): string {
+    return get_csrf_token();
+}
