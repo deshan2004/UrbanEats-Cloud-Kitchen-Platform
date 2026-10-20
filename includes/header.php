@@ -1,10 +1,13 @@
 <?php
 /**
  * UrbanEats Cloud Kitchen Platform
- * Shared Global Header (Component A)
+ * Shared Global Header & Navigation (Component A — Requirement 3)
  * 
- * Implements the official Figma Design System navigation bar,
- * adapting dynamically across Guest, Customer, Kitchen Staff, and Administrator roles.
+ * Implements team-wide shared navigation dynamically adapting across:
+ * - Guest (Public menu, Sign In, Sign Up)
+ * - Customer (Menu, Cart count, My Orders, Order Tracking, Profile)
+ * - Kitchen Staff (Order Queue, Dishes, Stock, Staff Avatar)
+ * - Administrator (Users Governance, Metrics Dashboard, Audit Log, Admin Avatar)
  */
 
 declare(strict_types=1);
