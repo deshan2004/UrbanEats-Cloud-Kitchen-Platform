@@ -1,0 +1,774 @@
+/* ==========================================================================
+   UrbanEats Cloud Kitchen Platform - Official Figma Design System
+   Enhanced with Modern Glassmorphism (Frosted Glass Aesthetics)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Brand Colors */
+  --primary-500: #F26B1D;
+  --primary-600: #D9570F;
+  --primary-100: #FFE0CC;
+  --primary-50:  #FFF1E7;
+
+  --primary: var(--primary-500);
+  --primary-hover: var(--primary-600);
+
+  /* Text & Neutrals */
+  --ink-900: #1F1B16;
+  --ink-700: #4A433B;
+  --ink-500: #7A7167;
+  --ink-300: #CFC8BF;
+  --ink-100: #EDE8E1;
+
+  /* Surfaces & Glassmorphism Properties */
+  --bg-page:        #FFF9F3;
+  --bg-surface:     rgba(255, 255, 255, 0.75);
+  --bg-surface-elevated: rgba(255, 255, 255, 0.88);
+  --bg-input:       rgba(255, 255, 255, 0.72);
+  --border-default: rgba(234, 223, 211, 0.75);
+  --glass-border:   rgba(255, 255, 255, 0.85);
+
+  /* Status Colors */
+  --success-500: #1F9D55;
+  --success-100: rgba(227, 246, 234, 0.85);
+
+  --warning-500: #C98206;
+  --warning-100: rgba(255, 243, 214, 0.85);
+
+  --danger-500:  #D8443A;
+  --danger-100:  rgba(253, 231, 229, 0.85);
+
+  --info-500:    #2F6FDE;
+  --info-100:    rgba(228, 237, 253, 0.85);
+
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Elevation Shadows with warm ambient refraction */
+  --shadow-sm: 0 2px 6px rgba(31, 27, 22, 0.04);
+  --shadow-md: 0 10px 25px -4px rgba(31, 27, 22, 0.05), 0 4px 10px -2px rgba(242, 107, 29, 0.03);
+  --shadow-lg: 0 20px 40px -10px rgba(31, 27, 22, 0.08), 0 8px 16px -4px rgba(242, 107, 29, 0.04);
+  --shadow-glass: 0 16px 36px -8px rgba(31, 27, 22, 0.06), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+
+  /* Radius Tokens */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+  --radius-full: 9999px;
+
+  /* Smooth transition */
+  --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Base Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+/* Modern Frosted Ambient Canvas with Luminous Orbs */
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-page);
+  background-image: 
+    radial-gradient(circle at 10% 15%, rgba(242, 107, 29, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(238, 150, 75, 0.14) 0%, transparent 48%),
+    radial-gradient(circle at 45% 75%, rgba(242, 107, 29, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 92% 90%, rgba(255, 224, 204, 0.25) 0%, transparent 35%);
+  background-attachment: fixed;
+  background-size: cover;
+  color: var(--ink-900);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--ink-900);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2.25rem;
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  color: var(--ink-700);
+}
+
+a {
+  color: var(--primary-500);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+a:hover {
+  color: var(--primary-600);
+}
+
+/* Layout Containers */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.main-content {
+  flex: 1 0 auto;
+  padding: 2.5rem 0 4rem;
+}
+
+/* ==========================================================================
+   Glassmorphism Header
+   ========================================================================== */
+.site-header {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border-default);
+  box-shadow: 0 4px 20px -4px rgba(31, 27, 22, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 74px;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.025em;
+}
+
+.brand-logo:hover {
+  color: var(--ink-900);
+  transform: translateY(-1px);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  list-style: none;
+}
+
+.nav-link {
+  color: var(--ink-700);
+  font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.nav-link:hover {
+  color: var(--primary-500);
+  background: rgba(242, 107, 29, 0.06);
+}
+
+.nav-link.active {
+  color: var(--primary-500);
+  font-weight: 700;
+  background: rgba(242, 107, 29, 0.08);
+}
+
+.header-user-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-role-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.user-avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 241, 231, 0.85);
+  backdrop-filter: blur(8px);
+  color: var(--primary-600);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: 1px solid rgba(255, 224, 204, 0.9);
+  box-shadow: 0 2px 8px rgba(242, 107, 29, 0.1);
+}
+
+/* ==========================================================================
+   Buttons (Glassmorphism & Solid CTAs)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.7rem 1.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-500), #e8590c);
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(242, 107, 29, 0.28);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--primary-600), #cc4a00);
+  box-shadow: 0 6px 20px rgba(242, 107, 29, 0.38);
+  transform: translateY(-1px);
+  color: #FFFFFF;
+}
+
+/* Glass Outline & Secondary Buttons */
+.btn-secondary, .btn-outline {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--primary-500);
+  border: 1px solid rgba(242, 107, 29, 0.4);
+  box-shadow: 0 2px 8px rgba(31, 27, 22, 0.03);
+}
+
+.btn-secondary:hover, .btn-outline:hover {
+  background: rgba(255, 241, 231, 0.9);
+  color: var(--primary-600);
+  border-color: var(--primary-500);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-900);
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-ghost:hover {
+  color: var(--danger-500);
+  background: rgba(216, 68, 58, 0.08);
+}
+
+.btn-danger {
+  background-color: var(--danger-500);
+  color: #FFFFFF;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(216, 68, 58, 0.25);
+}
+
+.btn-danger:hover {
+  background-color: #ba3229;
+  color: #FFFFFF;
+}
+
+.btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-md);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-cart-pill {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(242, 107, 29, 0.5);
+  color: var(--primary-500);
+  border-radius: var(--radius-full);
+  padding: 0.45rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(242, 107, 29, 0.08);
+}
+
+.btn-cart-pill:hover {
+  background: var(--primary-500);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   Glassmorphism Form Controls
+   ========================================================================== */
+.form-group {
+  margin-bottom: 1.35rem;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--ink-900);
+  margin-bottom: 0.5rem;
+}
+
+label .required {
+  color: var(--danger-500);
+  margin-left: 0.2rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.82rem 1.1rem;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(234, 223, 211, 0.9);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  color: var(--ink-900);
+  box-shadow: 0 1px 3px rgba(31, 27, 22, 0.02) inset;
+  transition: var(--transition);
+}
+
+.form-control:focus {
+  outline: none;
+  background: #FFFFFF;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 4px rgba(242, 107, 29, 0.15), 0 4px 12px rgba(242, 107, 29, 0.05);
+}
+
+.form-control.is-invalid {
+  border-color: var(--danger-500);
+  background: rgba(253, 231, 229, 0.4);
+}
+
+.form-control.is-invalid:focus {
+  box-shadow: 0 0 0 4px rgba(216, 68, 58, 0.15);
+}
+
+.input-hint {
+  font-size: 0.82rem;
+  color: var(--ink-500);
+  margin-top: 0.4rem;
+}
+
+.field-error {
+  color: var(--danger-500);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
+/* ==========================================================================
+   Glassmorphism Cards & Containers
+   ========================================================================== */
+.card, .table-card {
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(234, 223, 211, 0.45);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-glass);
+  margin-bottom: 1.75rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(234, 223, 211, 0.6);
+}
+
+/* Glass Stat Cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(234, 223, 211, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem 1.45rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px -4px rgba(31, 27, 22, 0.04);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 28px -4px rgba(31, 27, 22, 0.07);
+}
+
+.stat-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-500);
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  font-size: 2.15rem;
+  font-weight: 800;
+  color: var(--ink-900);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.stat-subtext {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--success-500);
+  margin-top: 0.45rem;
+}
+
+/* ==========================================================================
+   Glassmorphism Search & Filters
+   ========================================================================== */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+}
+
+.search-input-wrapper svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-500);
+  pointer-events: none;
+}
+
+.search-input-field {
+  width: 100%;
+  padding: 0.8rem 1rem 0.8rem 2.65rem;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 223, 211, 0.85);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  color: var(--ink-900);
+  transition: var(--transition);
+}
+
+.search-input-field:focus {
+  outline: none;
+  background: #FFFFFF;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 4px rgba(242, 107, 29, 0.12);
+}
+
+.filter-select {
+  padding: 0.8rem 1.25rem;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 223, 211, 0.85);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-700);
+  cursor: pointer;
+  min-width: 140px;
+  appearance: auto;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+}
+
+/* ==========================================================================
+   Glassmorphism Data Table
+   ========================================================================== */
+.table-card {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  outline: 1px solid rgba(234, 223, 211, 0.4);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-glass);
+  margin-bottom: 1.75rem;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.92rem;
+}
+
+.data-table th {
+  background: rgba(255, 249, 243, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--ink-500);
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 1rem 1.35rem;
+  border-bottom: 1px solid rgba(234, 223, 211, 0.6);
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 1.15rem 1.35rem;
+  border-bottom: 1px solid rgba(234, 223, 211, 0.45);
+  color: var(--ink-900);
+  vertical-align: middle;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr:hover td {
+  background-color: rgba(242, 107, 29, 0.04);
+}
+
+/* ==========================================================================
+   Glass Status Badges & Pills
+   ========================================================================== */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.status-pill .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.status-active {
+  background: rgba(227, 246, 234, 0.85);
+  color: var(--success-500);
+  border: 1px solid rgba(31, 157, 85, 0.25);
+}
+.status-active .dot { background: var(--success-500); }
+
+.status-inactive {
+  background: rgba(253, 231, 229, 0.85);
+  color: var(--danger-500);
+  border: 1px solid rgba(216, 68, 58, 0.25);
+}
+.status-inactive .dot { background: var(--danger-500); }
+
+.role-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(237, 232, 225, 0.85);
+  color: var(--ink-700);
+  border: 1px solid rgba(207, 200, 191, 0.5);
+}
+
+/* Callouts & Alerts */
+.callout-warning {
+  background: rgba(255, 243, 214, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 229, 184, 0.9);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.1rem;
+  color: #925C02;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.35rem;
+}
+
+.alert {
+  padding: 0.95rem 1.25rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.alert-success {
+  background: rgba(227, 246, 234, 0.85);
+  border: 1px solid rgba(31, 157, 85, 0.3);
+  color: #126335;
+}
+
+.alert-error, .alert-danger {
+  background: rgba(253, 231, 229, 0.85);
+  border: 1px solid rgba(216, 68, 58, 0.3);
+  color: #9A241C;
+}
+
+/* Pagination */
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: var(--ink-500);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  list-style: none;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  color: var(--ink-700);
+  font-size: 0.9rem;
+  font-weight: 700;
+  border: 1px solid rgba(234, 223, 211, 0.8);
+  transition: var(--transition);
+}
+
+.page-btn:hover {
+  color: var(--primary-500);
+  background: rgba(255, 241, 231, 0.9);
+}
+
+.page-btn.active {
+  background: var(--primary-500);
+  color: #FFFFFF;
+  border-color: var(--primary-500);
+  box-shadow: 0 4px 12px rgba(242, 107, 29, 0.28);
+}
+
+.page-btn.btn-nav {
+  border: 1px solid rgba(242, 107, 29, 0.5);
+  color: var(--primary-500);
+  padding: 0 1rem;
+}
+
+/* Footer */
+.site-footer {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-default);
+  padding: 2rem 0;
+  font-size: 0.88rem;
+  color: var(--ink-500);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .container { max-width: 960px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 0 1rem; }
+  .header-container { height: auto; padding: 1rem 0; flex-direction: column; gap: 1rem; }
+  .nav-links { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .data-table { font-size: 0.85rem; }
+}

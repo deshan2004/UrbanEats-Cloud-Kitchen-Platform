@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- Rounded Square Background in Figma Brand Orange -->
+  <rect width="100" height="100" rx="22" fill="#F26B1D"/>
+  
+  <!-- Steam Curves -->
+  <path d="M68 20C65 24 67 27 65 31" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <path d="M62 25C59 28 61 31 60 34" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Cloche Top Knob -->
+  <circle cx="45" cy="27" r="4" fill="#FFFFFF"/>
+  
+  <!-- Cloche Dome -->
+  <path d="M28 50C28 39 36 30 48 30C58 30 67 38 69 46L28 51Z" fill="#FFFFFF"/>
+  
+  <!-- Lower Bowl (Stylized 'U' Form) -->
+  <path d="M27 54H73C74 54 74.5 55 74 56.5L71 63C68 76 58 83 49 83C40 83 30 76 27 63L24 56.5C23.5 55 24 54 27 54Z" fill="#FFFFFF"/>
+  
+  <!-- Inner Cutout Creating Clear 'U' Letter Profile -->
+  <path d="M37 57H61C61 70 55 75 49 75C43 75 37 70 37 57Z" fill="#F26B1D"/>
+  
+  <!-- Base Stand -->
+  <path d="M38 85H60C62 85 63 87 61 88H37C35 87 36 85 38 85Z" fill="#FFFFFF"/>
+</svg>
