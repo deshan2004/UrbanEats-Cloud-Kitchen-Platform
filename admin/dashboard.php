@@ -92,7 +92,13 @@ require_once __DIR__ . '/../includes/header.php';
             Real-time identity, role access, and security audit metrics.
         </p>
     </div>
-    <div style="display: flex; gap: 0.75rem;">
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="<?= e(url('admin/reports.php')); ?>" class="btn btn-secondary btn-sm">
+            📊 Sales Reports
+        </a>
+        <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn btn-secondary btn-sm">
+            🍳 Order Queue
+        </a>
         <a href="<?= e(url('admin/users.php')); ?>" class="btn btn-primary btn-sm">
             Manage Users &rarr;
         </a>
