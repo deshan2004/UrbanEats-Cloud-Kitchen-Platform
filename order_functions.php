@@ -1,6 +1,4 @@
 <?php
-// includes/order_functions.php
-
 function allowed_transitions(): array {
     return [
         'Placed'           => ['Preparing', 'Cancelled'],
@@ -16,7 +14,6 @@ function allowed_transitions(): array {
 function change_order_status(PDO $pdo, int $orderId, string $newStatus, int $userId): bool {
     try {
         $pdo->beginTransaction();
-
         $stmt = $pdo->prepare("SELECT status FROM orders WHERE order_id = ? FOR UPDATE");
         $stmt->execute([$orderId]);
         $current = $stmt->fetchColumn();
@@ -29,11 +26,9 @@ function change_order_status(PDO $pdo, int $orderId, string $newStatus, int $use
 
         $pdo->prepare("UPDATE orders SET status = ? WHERE order_id = ?")
             ->execute([$newStatus, $orderId]);
-
         $pdo->prepare("INSERT INTO order_status_history (order_id, status, changed_by, changed_at)
                        VALUES (?, ?, ?, NOW())")
             ->execute([$orderId, $newStatus, $userId]);
-
         $pdo->commit();
 
         if (function_exists('log_action')) {
