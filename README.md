@@ -97,7 +97,100 @@ urbaneats/
 │   ├── tracking.php            # Live order timeline tracker
 │   └── kitchen_queue.php       # Kitchen staff order processing dashboard
 ├── database/
-│   └── urbaneats_db.sql        # Database schema, foreign keys & 20+ seed rows
+│   ├── urbaneats_db.sql        # Database schema, foreign keys & 20+ seed rows
+│   └── generate_images.php     # Starter dish placeholder generator
+├── tests/
+│   └── component_b_tests.php   # Automated verification test suite (17 test cases)
 ├── logs/
 │   └── error.log               # Server-side application error log
 └── README.md
+
+---
+
+## ⚙️ Installation & Setup Instructions
+
+1. **Prerequisites:**
+   * PHP 8.1 or higher (native standard CLI/module).
+   * MySQL / MariaDB (via XAMPP, WAMP, LAMP, or standalone).
+   * Apache or PHP built-in web server.
+
+2. **Database Import:**
+   * Open phpMyAdmin (`http://localhost/phpmyadmin`) or MySQL CLI.
+   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all 9 relational tables with indexes and constraints, and seeds 20+ realistic rows in each table.
+
+3. **Database Configuration:**
+   * Ensure `config/db.php` exists. If configuring a custom local MySQL password, edit `config/db.php`:
+     ```php
+     define('DB_HOST', '127.0.0.1');
+     define('DB_PORT', '3306');
+     define('DB_NAME', 'urbaneats_db');
+     define('DB_USER', 'root');
+     define('DB_PASS', ''); // Set your MySQL password if any
+     ```
+
+4. **Running Locally:**
+   * Start Apache and MySQL in XAMPP, or start PHP's built-in development server from the project root:
+     ```bash
+     php -S localhost:8000
+     ```
+   * Open your browser at `http://localhost:8000/`.
+
+---
+
+## 🔑 Test Login Credentials (Seed Accounts)
+
+All pre-seeded test accounts use the password: `Password123!`
+
+| Role | Username | Email | Access Scope |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin` | `admin@urbaneats.lk` | System governance, users, audit logs, reports |
+| **Kitchen Staff** | `chef_kasun` | `kasun@urbaneats.lk` | Dishes CRUD, categories, stock adjustments, order fulfillment |
+| **Kitchen Staff** | `chef_dilan` | `dilan@urbaneats.lk` | Menu catalogue management, kitchen order queue, inventory restock |
+| **Customer** | `anuki99` | `anuki.f@gmail.com` | Browse menu, cart, checkout, order tracking |
+| **Customer** | `kavindu_j` | `kavindu.j@outlook.com` | Regular customer ordering and order history |
+
+---
+
+## 🧪 Component B: Automated Test Suite
+
+Component B includes an automated test plan in `tests/component_b_tests.php` covering 17 test cases across functional requirements, validation, security, and edge cases. Run it via CLI:
+
+```bash
+php tests/component_b_tests.php
+```
+
+All 17 tests validate:
+* **TC-B01 to B02:** Standardized currency formatting (`format_price()`).
+* **TC-B03 to B04:** Contextual HTML output escaping with `e()` preventing XSS.
+* **TC-B05 to B07:** CSRF token generation, cryptographic validation, and rejection of tampered tokens.
+* **TC-B08 to B09:** SQL Injection mitigation through GET sort parameter whitelisting.
+* **TC-B10 to B12:** Secure media upload multi-point checks (extension whitelist, binary MIME check via `finfo_file`, 2MB size cap, safe `UPLOAD_ERR_NO_FILE` handling).
+* **TC-B13 to B14:** `reduce_stock()` rejection of non-positive or negative deduction quantities.
+* **TC-B15 to B17:** Accurate categorization of inventory levels (`in_stock`, `low_stock`, `out_of_stock`).
+
+---
+
+## 🎓 Component B Viva Defense Guide (Appendix B Questions)
+
+### Q1: Show how the search and pagination query is built. How do you stop SQL injection through the sort parameter?
+* **Answer:** All search terms and category IDs are passed through PDO prepared statements with parameter binding (`:search_name`, `:category_slug`). Because SQL does not allow binding column names or `ASC`/`DESC` directions in `ORDER BY` clauses via `?` or `:param`, we implement a **strict PHP whitelist map** (`$sortMap = ['newest' => 'd.id DESC', 'price_asc' => 'd.price ASC', ...]`). Any input that does not strictly match a key in the whitelist is rejected and falls back safely to `d.id DESC`. Thus, no client input ever reaches SQL concatenation.
+
+### Q2: What checks does your image upload perform, and why is the file extension alone not enough?
+* **Answer:** An extension check alone (e.g., checking if filename ends with `.jpg`) is vulnerable to file spoofing (e.g. an attacker uploading an executable script disguised as `exploit.php.jpg` or embedding PHP tags within an image file). Our upload routine in `upload_dish_image()` executes a multi-point defense:
+  1. Checks standard `$_FILES['image']['error'] === UPLOAD_ERR_OK`.
+  2. Enforces maximum 2MB file size ceiling.
+  3. Checks extension against whitelisted set `['jpg', 'jpeg', 'png', 'webp']`.
+  4. Performs **real binary inspection** using PHP's `finfo_file(FILEINFO_MIME_TYPE)` to examine magic bytes, strictly whitelisting `image/jpeg`, `image/png`, and `image/webp`.
+  5. Cryptographically renames the file using `bin2hex(random_bytes(10))` to eliminate path traversal and null byte injections.
+  6. Stores uploads in `public/uploads/` protected by a `.htaccess` file with `Require all denied` for executable script extensions.
+
+### Q3: Explain why `reduce_stock()` uses a transaction or a conditional UPDATE, and what happens with two simultaneous orders for the last item.
+* **Answer:** If two customers simultaneously attempt to buy the last remaining portion of a dish, a naive `SELECT quantity` followed by `UPDATE quantity = quantity - 1` causes a **race condition** (both see quantity = 1, both subtract 1, inventory drops to -1, resulting in overselling).  
+  In `reduce_stock()`, we use an **atomic conditional UPDATE with row locking**:
+  ```sql
+  UPDATE inventory 
+  SET quantity = quantity - :qty 
+  WHERE dish_id = :dish_id AND quantity >= :qty
+  ```
+  MySQL's row-level write lock ensures that the first transaction locks the inventory row and deducts the stock to 0. When the second transaction acquires the row lock, its `WHERE quantity >= 1` condition evaluates to false, resulting in `rowCount() === 0`. The function detects 0 rows affected, rolls back, returns `false`, and alerts Component C that the dish is sold out, guaranteeing the stock never drops below zero.
+
