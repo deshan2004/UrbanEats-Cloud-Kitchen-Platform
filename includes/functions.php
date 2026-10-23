@@ -126,3 +126,308 @@ function log_action(PDO $pdo, ?int $user_id, string $action, ?string $details = 
         return false;
     }
 }
+
+/**
+ * =========================================================================
+ * COMPONENT B: MENU, CATALOGUE & INVENTORY SHARED CONTRACT
+ * =========================================================================
+ */
+
+/**
+ * Formats a numeric currency value into standardized Sri Lankan Rupee (LKR) notation.
+ *
+ * @param float|int|string $amount
+ * @return string
+ */
+function format_price(float|int|string $amount): string {
+    return 'LKR ' . number_format((float)$amount, 2);
+}
+
+/**
+ * Component B contract function: Transaction-safe stock deduction.
+ * Called by Component C during checkout. Refuses to go below zero.
+ *
+ * Uses an atomic conditional UPDATE (`WHERE dish_id = :id AND quantity >= :qty`).
+ * If two concurrent checkouts attempt to claim the last remaining item, MySQL's
+ * row-level write lock ensures the first transaction updates the row, reducing quantity
+ * to 0. The second transaction's WHERE condition (`quantity >= 1`) then evaluates to false,
+ * affecting 0 rows, triggering safe refusal and rollback without overselling.
+ *
+ * @param PDO $pdo
+ * @param int $dish_id
+ * @param int $qty
+ * @param string $order_reference
+ * @return bool True if stock was successfully deducted; false if insufficient stock or error.
+ */
+function reduce_stock(PDO $pdo, int $dish_id, int $qty, string $order_reference = 'Order Checkout'): bool {
+    if ($qty <= 0) {
+        return false;
+    }
+
+    $inActiveTransaction = $pdo->inTransaction();
+    if (!$inActiveTransaction) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        // 1. Fetch current stock with row lock
+        $stmt = $pdo->prepare("SELECT quantity FROM inventory WHERE dish_id = :dish_id FOR UPDATE");
+        $stmt->execute([':dish_id' => $dish_id]);
+        $current = $stmt->fetchColumn();
+
+        if ($current === false || (int)$current < $qty) {
+            if (!$inActiveTransaction) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+
+        $prevQty = (int)$current;
+        $newQty  = $prevQty - $qty;
+
+        // 2. Perform atomic conditional update
+        $updateStmt = $pdo->prepare(
+            "UPDATE inventory 
+             SET quantity = quantity - :qty, updated_at = NOW() 
+             WHERE dish_id = :dish_id AND quantity >= :qty"
+        );
+        $updateStmt->execute([
+            ':qty'     => $qty,
+            ':dish_id' => $dish_id,
+        ]);
+
+        if ($updateStmt->rowCount() === 0) {
+            if (!$inActiveTransaction) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+
+        // 3. Record immutable stock movement
+        $movStmt = $pdo->prepare(
+            "INSERT INTO stock_movements (dish_id, user_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, created_at)
+             VALUES (:dish_id, :user_id, 'order_deduction', :qty_change, :prev_qty, :new_qty, :reason, NOW())"
+        );
+        $movStmt->execute([
+            ':dish_id'    => $dish_id,
+            ':user_id'    => $_SESSION['user_id'] ?? null,
+            ':qty_change' => -$qty,
+            ':prev_qty'   => $prevQty,
+            ':new_qty'    => $newQty,
+            ':reason'     => $order_reference,
+        ]);
+
+        if (!$inActiveTransaction) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $e) {
+        if (!$inActiveTransaction && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("[reduce_stock Error] " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Retrieves the current live inventory balance and status badge classification for a dish.
+ *
+ * @param PDO $pdo
+ * @param int $dish_id
+ * @return array
+ */
+function get_dish_stock(PDO $pdo, int $dish_id): array {
+    $stmt = $pdo->prepare(
+        "SELECT quantity, reorder_level 
+         FROM inventory 
+         WHERE dish_id = :dish_id 
+         LIMIT 1"
+    );
+    $stmt->execute([':dish_id' => $dish_id]);
+    $inv = $stmt->fetch();
+
+    if (!$inv) {
+        return [
+            'quantity'      => 0,
+            'reorder_level' => 10,
+            'status'        => 'out_of_stock',
+            'label'         => 'Out of Stock',
+            'badge_class'   => 'stock-badge-out',
+        ];
+    }
+
+    $qty     = (int)$inv['quantity'];
+    $reorder = (int)$inv['reorder_level'];
+
+    if ($qty <= 0) {
+        $status = 'out_of_stock';
+        $label  = 'Out of Stock';
+        $badge  = 'stock-badge-out';
+    } elseif ($qty <= $reorder) {
+        $status = 'low_stock';
+        $label  = 'Low Stock (' . $qty . ' left)';
+        $badge  = 'stock-badge-low';
+    } else {
+        $status = 'in_stock';
+        $label  = 'In Stock (' . $qty . ' available)';
+        $badge  = 'stock-badge-in';
+    }
+
+    return [
+        'quantity'      => $qty,
+        'reorder_level' => $reorder,
+        'status'        => $status,
+        'label'         => $label,
+        'badge_class'   => $badge,
+    ];
+}
+
+/**
+ * Records a staff inventory adjustment (restock, wastage, manual count correction).
+ *
+ * @param PDO $pdo
+ * @param int $dish_id
+ * @param int|null $user_id Staff user making adjustment
+ * @param string $movement_type 'restock', 'wastage', 'adjustment'
+ * @param int $quantity_change Positive or negative change
+ * @param string $reason Explanation note
+ * @return bool
+ */
+function adjust_stock(PDO $pdo, int $dish_id, ?int $user_id, string $movement_type, int $quantity_change, string $reason): bool {
+    if (!in_array($movement_type, ['restock', 'wastage', 'adjustment'], true)) {
+        return false;
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $stmt = $pdo->prepare("SELECT quantity FROM inventory WHERE dish_id = :id FOR UPDATE");
+        $stmt->execute([':id' => $dish_id]);
+        $current = $stmt->fetchColumn();
+
+        if ($current === false) {
+            // Create inventory row if missing
+            $ins = $pdo->prepare("INSERT INTO inventory (dish_id, quantity, reorder_level) VALUES (:id, 0, 10)");
+            $ins->execute([':id' => $dish_id]);
+            $prevQty = 0;
+        } else {
+            $prevQty = (int)$current;
+        }
+
+        $newQty = $prevQty + $quantity_change;
+        if ($newQty < 0) {
+            $pdo->rollBack();
+            return false; // Stock cannot drop below zero
+        }
+
+        $upd = $pdo->prepare("UPDATE inventory SET quantity = :qty, last_restocked_at = CASE WHEN :type = 'restock' THEN NOW() ELSE last_restocked_at END WHERE dish_id = :id");
+        $upd->execute([
+            ':qty'  => $newQty,
+            ':type' => $movement_type,
+            ':id'   => $dish_id,
+        ]);
+
+        $mov = $pdo->prepare(
+            "INSERT INTO stock_movements (dish_id, user_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, created_at)
+             VALUES (:dish_id, :user_id, :type, :change, :prev, :new, :reason, NOW())"
+        );
+        $mov->execute([
+            ':dish_id' => $dish_id,
+            ':user_id' => $user_id,
+            ':type'    => $movement_type,
+            ':change'  => $quantity_change,
+            ':prev'    => $prevQty,
+            ':new'     => $newQty,
+            ':reason'  => mb_substr($reason, 0, 255),
+        ]);
+
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log("[adjust_stock Error] " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Validates and securely processes dish image uploads.
+ *
+ * Security checks:
+ * 1. Checks standard $_FILES upload error codes.
+ * 2. Whitelists file extension (jpg, jpeg, png, webp).
+ * 3. Inspects real binary MIME type via finfo_file (protects against extension spoofing).
+ * 4. Limits file size to 2 MB (2,097,152 bytes).
+ * 5. Generates randomized filename to prevent directory traversal and overwrite attacks.
+ * 6. Stores outside script executable execution paths.
+ *
+ * @param array $file $_FILES['image'] item
+ * @return array ['success' => bool, 'path' => string|null, 'error' => string|null]
+ */
+function upload_dish_image(array $file): array {
+    if (!isset($file['error']) || is_array($file['error'])) {
+        return ['success' => false, 'path' => null, 'error' => 'Invalid file upload parameters.'];
+    }
+
+    if ($file['error'] === UPLOAD_ERR_NO_FILE) {
+        return ['success' => true, 'path' => null, 'error' => null]; // Optional image
+    }
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return ['success' => false, 'path' => null, 'error' => 'Upload failed with code: ' . $file['error']];
+    }
+
+    // 1. File size constraint (Max 2MB)
+    $maxBytes = 2 * 1024 * 1024;
+    if ($file['size'] > $maxBytes) {
+        return ['success' => false, 'path' => null, 'error' => 'Uploaded image exceeds maximum allowable limit of 2MB.'];
+    }
+
+    // 2. Extension whitelisting
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!in_array($extension, $allowedExtensions, true)) {
+        return ['success' => false, 'path' => null, 'error' => 'Only JPG, JPEG, PNG, and WEBP image formats are supported.'];
+    }
+
+    // 3. Real binary MIME-type check (finfo)
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $realMime = $finfo->file($file['tmp_name']);
+    $allowedMimes = [
+        'jpg'  => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png'  => 'image/png',
+        'webp' => 'image/webp',
+    ];
+
+    if (!in_array($realMime, array_values($allowedMimes), true)) {
+        return ['success' => false, 'path' => null, 'error' => 'File contents do not match a valid image MIME type.'];
+    }
+
+    // Verify extension matches real MIME
+    $expectedMime = $allowedMimes[$extension] ?? '';
+    if ($expectedMime !== $realMime) {
+        return ['success' => false, 'path' => null, 'error' => 'File extension does not correspond with genuine binary format.'];
+    }
+
+    // 4. Secure random filename generation
+    $targetDir = dirname(__DIR__) . '/public/uploads';
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0755, true);
+    }
+
+    $uniqueName = 'dish_' . bin2hex(random_bytes(10)) . '.' . $extension;
+    $targetPath = $targetDir . '/' . $uniqueName;
+
+    if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return ['success' => false, 'path' => null, 'error' => 'Failed to save uploaded image to destination directory.'];
+    }
+
+    return [
+        'success' => true,
+        'path'    => 'uploads/' . $uniqueName,
+        'error'   => null,
+    ];
+}
