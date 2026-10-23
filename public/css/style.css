@@ -1314,3 +1314,28 @@ label .required {
   .dish-detail-media-card img { height: 260px; }
 }
 
+/* ==========================================================================
+   Print Optimization & Invoice Formatting
+   ========================================================================== */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #111827 !important;
+    font-size: 10pt !important;
+  }
+
+  .site-header,
+  .site-footer,
+  #ue-confirm-overlay,
+  .no-print,
+  .btn:not(.print-include) {
+    display: none !important;
+  }
+
+  .card, .table-card {
+    box-shadow: none !important;
+    border: 1px solid #D1D5DB !important;
+  }
+}
+
+
