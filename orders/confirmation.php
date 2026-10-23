@@ -30,7 +30,7 @@ if ($pdo && $code !== '') {
              FROM order_items oi
              JOIN dishes d ON d.dish_id = oi.dish_id
              WHERE oi.order_id = ?
-             ORDER BY oi.order_item_id ASC"
+             ORDER BY oi.item_id ASC"
         );
         $stmtItems->execute([(int)$order['order_id']]);
         $items = $stmtItems->fetchAll();
