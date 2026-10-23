@@ -140,5 +140,10 @@ declare(strict_types=1);
 })();
 </script>
 
+<?php if (!empty($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'kitchen_staff'], true)): ?>
+    <!-- Real-time Live Order Alerting Engine for Admin & Kitchen Operations -->
+    <script src="<?= e(url('public/js/admin_notifications.js')) . '?v=' . time(); ?>"></script>
+<?php endif; ?>
+
 </body>
 </html>

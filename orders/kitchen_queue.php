@@ -1,7 +1,13 @@
 <?php
 /**
  * UrbanEats Cloud Kitchen Platform
- * Component C: Kitchen Order Fulfillment Queue (Kanban Console)
+ * Component C: Live Kitchen Order Fulfillment Queue (Interactive Kanban Console)
+ * 
+ * Features:
+ * - Real-time ticket board across 4 operational fulfillment stages
+ * - Live auto-refresh polling with audio chime triggers on new orders
+ * - Interactive instant ticket search & filter
+ * - Strict business state transitions & workflow guards
  */
 
 declare(strict_types=1);
@@ -50,7 +56,8 @@ $cancelledTodayCount = 0;
 if ($pdo) {
     $stmt = $pdo->query(
         "SELECT o.*, u.full_name AS customer_name,
-                GROUP_CONCAT(CONCAT(oi.quantity, 'x ', d.name) SEPARATOR '<br>') AS items_html
+                GROUP_CONCAT(CONCAT(oi.quantity, 'x ', d.name) SEPARATOR '<br>') AS items_html,
+                GROUP_CONCAT(CONCAT(oi.quantity, 'x ', d.name) SEPARATOR ', ') AS items_plain
          FROM orders o
          JOIN users u ON o.user_id = u.id
          LEFT JOIN order_items oi ON o.order_id = oi.order_id
@@ -77,78 +84,131 @@ if ($pdo) {
 }
 
 $transitions = allowed_transitions();
-$pageTitle = 'Kitchen Order Queue';
+$pageTitle = 'Live Kitchen Order Queue';
 require_once __DIR__ . '/../includes/header.php';
 ?>
+
+<style>
+.kitchen-ticket {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid var(--border-default);
+    background: #FFFFFF;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.kitchen-ticket:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.ticket-placed-glow {
+    border-left: 5px solid #F26B1D !important;
+    background: linear-gradient(180deg, rgba(254, 243, 199, 0.15) 0%, #FFFFFF 100%);
+}
+
+.ticket-preparing-glow {
+    border-left: 5px solid #F59E0B !important;
+}
+
+.ticket-ready-glow {
+    border-left: 5px solid #10B981 !important;
+}
+</style>
 
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3.5rem;">
     
     <!-- Page Header & Metrics Bar -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
-                Component C &bull; Kitchen Operations
-            </span>
-            <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0.25rem 0;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem;">
+                <span style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.12); color: #059669; font-size: 0.78rem; font-weight: 700; padding: 0.2rem 0.65rem; border-radius: var(--radius-full); text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(16, 185, 129, 0.25);">
+                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; animation: ue-pulse-dot 1.5s infinite;"></span>
+                    Live Syncing
+                </span>
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
+                    Component C &bull; Kitchen Operations
+                </span>
+            </div>
+            <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0 0 0.25rem; letter-spacing: -0.02em;">
                 Live Kitchen Order Queue
             </h1>
-            <p style="color: var(--ink-500); font-size: 1rem;">
-                Move tickets through kitchen stages. Transitions enforce strict business workflow rules.
+            <p style="color: var(--ink-500); font-size: 1rem; margin: 0;">
+                Move tickets through kitchen stages. Transitions enforce strict culinary workflow rules.
             </p>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem;">
-                <span style="color: var(--ink-500);">Active:</span> <strong style="color: var(--primary-600);"><?= $activeCount; ?></strong>
+        <!-- Metric Badges & Quick Action Controls -->
+        <div style="display: flex; gap: 0.65rem; align-items: center; flex-wrap: wrap;">
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); padding: 0.45rem 0.9rem; border-radius: var(--radius-md); font-size: 0.88rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                <span style="color: var(--ink-500);">Active Tickets:</span> <strong style="color: var(--primary-600); font-size: 1.05rem;" class="ue-live-active-orders"><?= $activeCount; ?></strong>
             </div>
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); padding: 0.5rem 1rem; border-radius: var(--radius-md); font-size: 0.88rem;">
-                <span style="color: var(--ink-500);">Completed Today:</span> <strong style="color: var(--success-600);"><?= $completedTodayCount; ?></strong>
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-default); padding: 0.45rem 0.9rem; border-radius: var(--radius-md); font-size: 0.88rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                <span style="color: var(--ink-500);">Completed Today:</span> <strong style="color: var(--success-600); font-size: 1.05rem;"><?= $completedTodayCount; ?></strong>
             </div>
-            <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn btn-secondary btn-sm" style="padding: 0.55rem 0.9rem;" title="Refresh Queue">
-                🔄 Refresh
+            <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn btn-secondary btn-sm" style="padding: 0.5rem 0.9rem; font-weight: 600;" title="Refresh Queue Board">
+                🔄 Refresh Board
             </a>
         </div>
     </div>
 
+    <!-- Interactive Search Bar & Live Filters -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; background: var(--bg-surface); padding: 0.85rem 1.15rem; border-radius: var(--radius-md); border: 1px solid var(--border-default);">
+        <div style="flex: 1; max-width: 480px; position: relative;">
+            <input type="text" 
+                   id="queueSearch" 
+                   placeholder="🔍 Quick filter by order code, customer name, or dish..." 
+                   class="form-control" 
+                   style="border-radius: 9999px; padding: 0.5rem 1.15rem; font-size: 0.88rem; background: var(--bg-page); border: 1px solid var(--border-default);"
+                   autocomplete="off">
+        </div>
+        <div style="display: flex; gap: 0.5rem; align-items: center; font-size: 0.82rem; color: var(--ink-500);">
+            <span id="ticketCountLabel">Showing <strong><?= $activeCount; ?></strong> active orders</span>
+        </div>
+    </div>
+
     <!-- Kanban Board Layout -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; align-items: start;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.5rem; align-items: start;">
         
-        <!-- Column 1: Placed Orders -->
-        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--info-500);">
+        <!-- Column 1: Placed Orders (Incoming) -->
+        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--info-500); border-radius: 14px; overflow: hidden;">
             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
-                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0;">
-                    📥 Placed (<?= count($ordersByStatus['Placed']); ?>)
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>📥</span> Placed (<span id="placedColumnCounter"><?= count($ordersByStatus['Placed']); ?></span>)
                 </h2>
                 <span style="font-size: 0.75rem; background: var(--info-100); color: var(--info-700); font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
                     Incoming
                 </span>
             </div>
 
-            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;" class="ticket-column-container">
                 <?php if (empty($ordersByStatus['Placed'])): ?>
-                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No new incoming orders.</p>
+                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No incoming orders.</p>
                 <?php else: ?>
                     <?php foreach ($ordersByStatus['Placed'] as $o): ?>
-                        <div class="card" style="padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-default);">
+                        <div class="kitchen-ticket ticket-placed-glow" data-search="<?= strtolower(e($o['order_code'] . ' ' . $o['customer_name'] . ' ' . ($o['items_plain'] ?? ''))); ?>">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                                 <div>
-                                    <strong style="font-size: 1.05rem; color: var(--ink-900);">#<?= e($o['order_code']); ?></strong>
-                                    <span style="display: block; font-size: 0.8rem; color: var(--ink-500);"><?= e($o['customer_name']); ?></span>
+                                    <strong style="font-size: 1.05rem; color: var(--ink-900); font-family: 'Courier New', Courier, monospace;">
+                                        #<?= e($o['order_code']); ?>
+                                    </strong>
+                                    <span style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink-600);"><?= e($o['customer_name']); ?></span>
                                 </div>
                                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--ink-500); background: var(--bg-surface-alt); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">
                                     <?= date('H:i', strtotime($o['created_at'])); ?>
                                 </span>
                             </div>
 
-                            <div style="font-size: 0.88rem; color: var(--ink-700); line-height: 1.5; margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--bg-page); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.88rem; color: var(--ink-800); line-height: 1.5; margin-bottom: 0.85rem; padding: 0.6rem 0.8rem; background: var(--bg-page); border-radius: var(--radius-sm); border: 1px solid var(--border-default);">
                                 <?= $o['items_html']; ?>
                             </div>
 
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.85rem;">
-                                <span style="font-weight: 600; color: var(--ink-600); text-transform: uppercase;">
-                                    <?= e($o['order_type']); ?>
+                                <span style="font-weight: 700; color: <?= ($o['order_type'] === 'delivery') ? '#1D4ED8' : '#047857'; ?>; text-transform: uppercase;">
+                                    <?= ($o['order_type'] === 'delivery') ? '🛵 Delivery' : '🏪 Pickup'; ?>
                                 </span>
-                                <strong style="color: var(--primary-600);">LKR <?= number_format((float)$o['total_amount'], 2); ?></strong>
+                                <strong style="color: var(--primary-600); font-size: 0.95rem;">LKR <?= number_format((float)$o['total_amount'], 2); ?></strong>
                             </div>
 
                             <!-- Workflow Action Buttons -->
@@ -158,7 +218,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="hidden" name="action" value="transition">
                                     <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                     <input type="hidden" name="new_status" value="Preparing">
-                                    <button type="submit" class="btn btn-primary btn-sm btn-block" style="font-weight: 700;">
+                                    <button type="submit" class="btn btn-primary btn-sm btn-block" style="font-weight: 700; padding: 0.55rem 0.75rem;">
                                         Start Preparing &rarr;
                                     </button>
                                 </form>
@@ -167,7 +227,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="hidden" name="action" value="transition">
                                     <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                     <input type="hidden" name="new_status" value="Cancelled">
-                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger-600);" data-confirm="Are you sure you want to cancel this order?" title="Cancel Order">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger-600); padding: 0.55rem 0.75rem;" data-confirm="Are you sure you want to cancel this order?" title="Cancel Order">
                                         ✕
                                     </button>
                                 </form>
@@ -178,42 +238,44 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Column 2: Preparing Orders -->
-        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--warning-500);">
+        <!-- Column 2: Preparing Orders (Cooking) -->
+        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--warning-500); border-radius: 14px; overflow: hidden;">
             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
-                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0;">
-                    🍳 Preparing (<?= count($ordersByStatus['Preparing']); ?>)
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>🍳</span> Preparing (<?= count($ordersByStatus['Preparing']); ?>)
                 </h2>
                 <span style="font-size: 0.75rem; background: var(--warning-100); color: var(--warning-700); font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
                     Cooking
                 </span>
             </div>
 
-            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;" class="ticket-column-container">
                 <?php if (empty($ordersByStatus['Preparing'])): ?>
-                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No orders currently on the stove.</p>
+                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No tickets currently on the stove.</p>
                 <?php else: ?>
                     <?php foreach ($ordersByStatus['Preparing'] as $o): ?>
-                        <div class="card" style="padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-default);">
+                        <div class="kitchen-ticket ticket-preparing-glow" data-search="<?= strtolower(e($o['order_code'] . ' ' . $o['customer_name'] . ' ' . ($o['items_plain'] ?? ''))); ?>">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                                 <div>
-                                    <strong style="font-size: 1.05rem; color: var(--ink-900);">#<?= e($o['order_code']); ?></strong>
-                                    <span style="display: block; font-size: 0.8rem; color: var(--ink-500);"><?= e($o['customer_name']); ?></span>
+                                    <strong style="font-size: 1.05rem; color: var(--ink-900); font-family: 'Courier New', Courier, monospace;">
+                                        #<?= e($o['order_code']); ?>
+                                    </strong>
+                                    <span style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink-600);"><?= e($o['customer_name']); ?></span>
                                 </div>
                                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--ink-500); background: var(--bg-surface-alt); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">
                                     <?= date('H:i', strtotime($o['created_at'])); ?>
                                 </span>
                             </div>
 
-                            <div style="font-size: 0.88rem; color: var(--ink-700); line-height: 1.5; margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--bg-page); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.88rem; color: var(--ink-800); line-height: 1.5; margin-bottom: 0.85rem; padding: 0.6rem 0.8rem; background: var(--bg-page); border-radius: var(--radius-sm); border: 1px solid var(--border-default);">
                                 <?= $o['items_html']; ?>
                             </div>
 
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 0.85rem;">
-                                <span style="font-weight: 600; color: var(--ink-600); text-transform: uppercase;">
-                                    <?= e($o['order_type']); ?>
+                                <span style="font-weight: 700; color: <?= ($o['order_type'] === 'delivery') ? '#1D4ED8' : '#047857'; ?>; text-transform: uppercase;">
+                                    <?= ($o['order_type'] === 'delivery') ? '🛵 Delivery' : '🏪 Pickup'; ?>
                                 </span>
-                                <strong style="color: var(--primary-600);">LKR <?= number_format((float)$o['total_amount'], 2); ?></strong>
+                                <strong style="color: var(--primary-600); font-size: 0.95rem;">LKR <?= number_format((float)$o['total_amount'], 2); ?></strong>
                             </div>
 
                             <!-- Workflow Action Buttons -->
@@ -222,8 +284,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="Ready">
-                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--warning-600); border-color: var(--warning-600); font-weight: 700;">
-                                    Mark as Ready 🔔
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--warning-600); border-color: var(--warning-600); font-weight: 700; padding: 0.55rem 0.75rem;">
+                                    Mark as Ready 🔔 &rarr;
                                 </button>
                             </form>
                         </div>
@@ -232,34 +294,36 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
         </div>
 
-        <!-- Column 3: Ready Orders -->
-        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--success-500);">
+        <!-- Column 3: Ready Orders (Packaged) -->
+        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--success-500); border-radius: 14px; overflow: hidden;">
             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
-                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0;">
-                    ✅ Ready (<?= count($ordersByStatus['Ready']); ?>)
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>✅</span> Ready (<?= count($ordersByStatus['Ready']); ?>)
                 </h2>
                 <span style="font-size: 0.75rem; background: var(--success-100); color: var(--success-700); font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
                     Packaged
                 </span>
             </div>
 
-            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;" class="ticket-column-container">
                 <?php if (empty($ordersByStatus['Ready'])): ?>
                     <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No packaged orders awaiting dispatch.</p>
                 <?php else: ?>
                     <?php foreach ($ordersByStatus['Ready'] as $o): ?>
-                        <div class="card" style="padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-default);">
+                        <div class="kitchen-ticket ticket-ready-glow" data-search="<?= strtolower(e($o['order_code'] . ' ' . $o['customer_name'] . ' ' . ($o['items_plain'] ?? ''))); ?>">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                                 <div>
-                                    <strong style="font-size: 1.05rem; color: var(--ink-900);">#<?= e($o['order_code']); ?></strong>
-                                    <span style="display: block; font-size: 0.8rem; color: var(--ink-500);"><?= e($o['customer_name']); ?></span>
+                                    <strong style="font-size: 1.05rem; color: var(--ink-900); font-family: 'Courier New', Courier, monospace;">
+                                        #<?= e($o['order_code']); ?>
+                                    </strong>
+                                    <span style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink-600);"><?= e($o['customer_name']); ?></span>
                                 </div>
                                 <span style="font-size: 0.78rem; font-weight: 700; color: var(--ink-500); background: var(--bg-surface-alt); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">
                                     <?= date('H:i', strtotime($o['created_at'])); ?>
                                 </span>
                             </div>
 
-                            <div style="font-size: 0.88rem; color: var(--ink-700); line-height: 1.5; margin-bottom: 1rem; padding: 0.5rem 0.75rem; background: var(--bg-page); border-radius: var(--radius-sm);">
+                            <div style="font-size: 0.88rem; color: var(--ink-800); line-height: 1.5; margin-bottom: 0.85rem; padding: 0.6rem 0.8rem; background: var(--bg-page); border-radius: var(--radius-sm); border: 1px solid var(--border-default);">
                                 <?= $o['items_html']; ?>
                             </div>
 
@@ -270,7 +334,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="<?= e($nextStage); ?>">
-                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--success-600); border-color: var(--success-600); font-weight: 700;">
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--success-600); border-color: var(--success-600); font-weight: 700; padding: 0.55rem 0.75rem;">
                                     Dispatch: <?= e($nextStage); ?> &rarr;
                                 </button>
                             </form>
@@ -281,33 +345,38 @@ require_once __DIR__ . '/../includes/header.php';
         </div>
 
         <!-- Column 4: In Transit / Awaiting Final Completion -->
-        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--ink-500);">
+        <div class="card" style="padding: 0; background: var(--bg-surface-alt); border-top: 4px solid var(--ink-500); border-radius: 14px; overflow: hidden;">
             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
-                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0;">
-                    🛵 Transit / Counter (<?= count($ordersByStatus['Out for Delivery']) + count($ordersByStatus['Collected']); ?>)
+                <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--ink-900); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                    <span>🛵</span> Transit (<?= count($ordersByStatus['Out for Delivery']) + count($ordersByStatus['Collected']); ?>)
                 </h2>
                 <span style="font-size: 0.75rem; background: var(--ink-100); color: var(--ink-700); font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full);">
-                    Delivery
+                    Dispatch
                 </span>
             </div>
 
-            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="padding: 1rem; display: flex; flex-direction: column; gap: 1rem;" class="ticket-column-container">
                 <?php 
                 $transitOrders = array_merge($ordersByStatus['Out for Delivery'], $ordersByStatus['Collected']);
                 ?>
                 <?php if (empty($transitOrders)): ?>
-                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No orders currently on the road.</p>
+                    <p style="text-align: center; color: var(--ink-400); font-size: 0.9rem; padding: 1.5rem 0; margin: 0;">No orders currently in transit.</p>
                 <?php else: ?>
                     <?php foreach ($transitOrders as $o): ?>
-                        <div class="card" style="padding: 1.25rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-default);">
+                        <div class="kitchen-ticket" data-search="<?= strtolower(e($o['order_code'] . ' ' . $o['customer_name'] . ' ' . $o['delivery_address'])); ?>">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                                 <div>
-                                    <strong style="font-size: 1.05rem; color: var(--ink-900);">#<?= e($o['order_code']); ?></strong>
-                                    <span style="display: block; font-size: 0.8rem; color: var(--ink-500);"><?= e($o['customer_name']); ?> (<?= e($o['status']); ?>)</span>
+                                    <strong style="font-size: 1.05rem; color: var(--ink-900); font-family: 'Courier New', Courier, monospace;">
+                                        #<?= e($o['order_code']); ?>
+                                    </strong>
+                                    <span style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink-600);"><?= e($o['customer_name']); ?></span>
                                 </div>
+                                <span style="font-size: 0.75rem; font-weight: 700; background: var(--primary-50); color: var(--primary-600); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm);">
+                                    <?= e($o['status']); ?>
+                                </span>
                             </div>
 
-                            <p style="font-size: 0.85rem; color: var(--ink-600); margin-bottom: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--ink-600); margin: 0 0 1rem; line-height: 1.4;">
                                 📍 <?= nl2br(e($o['delivery_address'])); ?>
                             </p>
 
@@ -316,7 +385,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="Completed">
-                                <button type="submit" class="btn btn-secondary btn-sm btn-block" style="font-weight: 700; color: var(--success-700);">
+                                <button type="submit" class="btn btn-secondary btn-sm btn-block" style="font-weight: 700; color: var(--success-700); padding: 0.55rem 0.75rem;">
                                     Mark as Delivered / Completed ✓
                                 </button>
                             </form>
@@ -329,5 +398,39 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 
 </div>
+
+<!-- Interactive Client-side Ticket Filter -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('queueSearch');
+    const counterLabel = document.getElementById('ticketCountLabel');
+    const allTickets = document.querySelectorAll('.kitchen-ticket');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            let visibleCount = 0;
+
+            allTickets.forEach(ticket => {
+                const searchContent = (ticket.getAttribute('data-search') || '').toLowerCase();
+                if (!query || searchContent.includes(query)) {
+                    ticket.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    ticket.style.display = 'none';
+                }
+            });
+
+            if (counterLabel) {
+                if (query) {
+                    counterLabel.innerHTML = `Found <strong>${visibleCount}</strong> of ${allTickets.length} orders`;
+                } else {
+                    counterLabel.innerHTML = `Showing <strong>${allTickets.length}</strong> active orders`;
+                }
+            }
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
