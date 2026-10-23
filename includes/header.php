@@ -154,9 +154,12 @@ if ($currentUser) {
                                         Loading order updates...
                                     </div>
                                 </div>
-                                <div style="padding: 0.6rem 1rem 0.2rem; border-top: 1px solid var(--border-default); text-align: center;">
-                                    <a href="<?= e(url('orders/history.php')); ?>" style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-decoration: none;">
-                                        View Full Order History &rarr;
+                                <div style="padding: 0.6rem 1rem; border-top: 1px solid var(--border-default); background: #FFF8F5; display: flex; justify-content: space-between; align-items: center; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;">
+                                    <a href="tel:+94117509000" style="font-size: 0.75rem; font-weight: 800; color: #DC2626; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Call Kitchen Helpline Immediately">
+                                        <span>🚨</span> Not received? Call Desk
+                                    </a>
+                                    <a href="https://wa.me/94771234567?text=Hi%20UrbanEats%20Kitchen,%20my%20order%20status%20has%20an%20issue." target="_blank" style="font-size: 0.75rem; font-weight: 700; color: #059669; text-decoration: none; display: inline-flex; align-items: center; gap: 3px;">
+                                        <span>💬</span> WhatsApp
                                     </a>
                                 </div>
                             </div>
