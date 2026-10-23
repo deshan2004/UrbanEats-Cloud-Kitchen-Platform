@@ -68,6 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($phone)) {
         $errors['phone'] = 'A valid contact phone number is required.';
     }
+    if ($orderType === 'pickup' && $paymentMethod === 'cod') {
+        $errors['payment_method'] = 'Cash on Delivery (COD) is not available for Kitchen Pickup orders. Please select Credit / Debit Card or Direct Bank Transfer.';
+    }
 
     if (empty($errors) && $pdo) {
         try {
@@ -310,30 +313,38 @@ require_once __DIR__ . '/../includes/header.php';
                 </h2>
 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                    <label style="border: 2px solid var(--primary-500); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; background: var(--primary-50);">
-                        <input type="radio" name="payment_method" value="cod" checked>
+                    <label id="paymentMethodCodLabel" style="border: 2px solid var(--primary-500); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; background: var(--primary-50); transition: all 0.2s ease;">
+                        <input type="radio" name="payment_method" value="cod" id="paymentMethodCod" checked onchange="updatePaymentMethodStyles()">
                         <div>
                             <strong style="display: block; color: var(--ink-900);">💵 Cash on Delivery (COD)</strong>
                             <small style="color: var(--ink-500);">Pay cash to our delivery rider upon receipt</small>
                         </div>
                     </label>
 
-                    <label style="border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer;">
-                        <input type="radio" name="payment_method" value="card">
+                    <label id="paymentMethodCardLabel" style="border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.2s ease;">
+                        <input type="radio" name="payment_method" value="card" id="paymentMethodCard" onchange="updatePaymentMethodStyles()">
                         <div>
-                            <strong style="display: block; color: var(--ink-900);">💳 Credit / Debit Card (Simulated)</strong>
-                            <small style="color: var(--ink-500);">Transaction simulated in test sandbox environment</small>
+                            <strong style="display: block; color: var(--ink-900);">💳 Credit / Debit Card (Instant Sandbox)</strong>
+                            <small style="color: var(--ink-500);">Prepaid checkout — immediately queued for kitchen preparation</small>
                         </div>
                     </label>
 
-                    <label style="border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer;">
-                        <input type="radio" name="payment_method" value="bank">
+                    <label id="paymentMethodBankLabel" style="border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 1rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.2s ease;">
+                        <input type="radio" name="payment_method" value="bank" id="paymentMethodBank" onchange="updatePaymentMethodStyles()">
                         <div>
                             <strong style="display: block; color: var(--ink-900);">🏦 Direct Bank Transfer</strong>
                             <small style="color: var(--ink-500);">Instant electronic fund transfer verification</small>
                         </div>
                     </label>
                 </div>
+
+                <div id="pickupPaymentNotice" style="display: none; margin-top: 1rem; padding: 0.85rem 1.1rem; background: rgba(254, 243, 199, 0.75); border: 1px solid #F59E0B; border-radius: var(--radius-md); font-size: 0.86rem; color: #92400E; line-height: 1.5;">
+                    ℹ️ <strong>Kitchen Pickup Notice:</strong> Cash on Delivery (COD) is disabled because this order will be collected directly from the kitchen counter. Please select <strong>Credit / Debit Card</strong> or <strong>Direct Bank Transfer</strong> so our kitchen staff can start preparation.
+                </div>
+
+                <?php if (!empty($errors['payment_method'])): ?>
+                    <div class="field-error" style="margin-top: 0.75rem; color: var(--danger-500); font-weight: 600; font-size: 0.88rem;"><?= e($errors['payment_method']); ?></div>
+                <?php endif; ?>
             </div>
 
         </div>
@@ -379,7 +390,7 @@ require_once __DIR__ . '/../includes/header.php';
 
             <div style="display: flex; justify-content: space-between; margin-top: 1rem; margin-bottom: 1.5rem; font-size: 1.25rem;">
                 <span style="font-weight: 800; color: var(--ink-900);">Total Due</span>
-                <span style="font-weight: 800; color: var(--primary-600);">LKR <?= number_format(max(0, $subtotal + $delivery_fee - $discount), 2); ?></span>
+                <span style="font-weight: 800; color: var(--primary-600);" id="totalDueAmount">LKR <?= number_format(max(0, $subtotal + $delivery_fee - $discount), 2); ?></span>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" style="padding: 0.9rem; font-size: 1.05rem; font-weight: 800; border-radius: var(--radius-md);">
@@ -395,21 +406,83 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+const subtotalVal = <?= (float)$subtotal; ?>;
+const discountVal = <?= (float)$discount; ?>;
+const deliveryFeeVal = 250.00;
+
+function updatePaymentMethodStyles() {
+    const codRadio = document.getElementById('paymentMethodCod');
+    const cardRadio = document.getElementById('paymentMethodCard');
+    const bankRadio = document.getElementById('paymentMethodBank');
+
+    const codLabel = document.getElementById('paymentMethodCodLabel');
+    const cardLabel = document.getElementById('paymentMethodCardLabel');
+    const bankLabel = document.getElementById('paymentMethodBankLabel');
+
+    const resetStyle = (el) => {
+        if (!el) return;
+        el.style.borderColor = 'var(--border-default)';
+        el.style.background = 'transparent';
+        el.style.borderWidth = '1px';
+    };
+    const activeStyle = (el) => {
+        if (!el) return;
+        el.style.borderColor = 'var(--primary-500)';
+        el.style.background = 'var(--primary-50)';
+        el.style.borderWidth = '2px';
+    };
+
+    [codLabel, cardLabel, bankLabel].forEach(resetStyle);
+
+    if (codRadio && codRadio.checked && codLabel.style.display !== 'none') {
+        activeStyle(codLabel);
+    } else if (cardRadio && cardRadio.checked) {
+        activeStyle(cardLabel);
+    } else if (bankRadio && bankRadio.checked) {
+        activeStyle(bankLabel);
+    }
+}
+
 function toggleDeliveryFields(isDelivery) {
     var group = document.getElementById('deliveryAddressGroup');
     var addressInput = document.getElementById('address');
     var deliveryFeeLine = document.getElementById('deliveryFeeLine');
-    if (group && addressInput) {
-        if (isDelivery) {
-            group.style.display = 'block';
-            addressInput.required = true;
-            if (deliveryFeeLine) deliveryFeeLine.style.display = 'flex';
-        } else {
-            group.style.display = 'none';
-            addressInput.required = false;
-            if (deliveryFeeLine) deliveryFeeLine.style.display = 'none';
+    var totalDueSpan = document.getElementById('totalDueAmount');
+    var codLabel = document.getElementById('paymentMethodCodLabel');
+    var codRadio = document.getElementById('paymentMethodCod');
+    var cardRadio = document.getElementById('paymentMethodCard');
+    var pickupNotice = document.getElementById('pickupPaymentNotice');
+
+    if (isDelivery) {
+        if (group) group.style.display = 'block';
+        if (addressInput) addressInput.required = true;
+        if (deliveryFeeLine) deliveryFeeLine.style.display = 'flex';
+        if (codLabel) codLabel.style.display = 'flex';
+        if (pickupNotice) pickupNotice.style.display = 'none';
+
+        var newTotal = Math.max(0, subtotalVal + deliveryFeeVal - discountVal);
+        if (totalDueSpan) {
+            totalDueSpan.textContent = 'LKR ' + newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+    } else {
+        if (group) group.style.display = 'none';
+        if (addressInput) addressInput.required = false;
+        if (deliveryFeeLine) deliveryFeeLine.style.display = 'none';
+        if (codLabel) codLabel.style.display = 'none';
+        if (pickupNotice) pickupNotice.style.display = 'block';
+
+        // When choosing pickup, automatically switch away from Cash on Delivery to Card
+        if (codRadio && codRadio.checked && cardRadio) {
+            cardRadio.checked = true;
+        }
+
+        var newTotal = Math.max(0, subtotalVal - discountVal);
+        if (totalDueSpan) {
+            totalDueSpan.textContent = 'LKR ' + newTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
     }
+
+    updatePaymentMethodStyles();
 }
 
 document.addEventListener('DOMContentLoaded', function () {

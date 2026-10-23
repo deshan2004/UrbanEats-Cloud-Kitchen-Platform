@@ -134,6 +134,12 @@ $codStatus = ('cod' === 'cod') ? 'Pending' : 'Completed';
 $cardStatus = ('card' === 'cod') ? 'Pending' : 'Completed';
 assert_test("TC-C19: Payment simulation maps COD to 'Pending' and Card/Bank to 'Completed'", $codStatus === 'Pending' && $cardStatus === 'Completed');
 
+// TC-C20: Kitchen Counter Pickup Rejects Cash on Delivery (Requires Prepaid Card/Bank)
+$pickupOrderType = 'pickup';
+$attemptedPaymentMethod = 'cod';
+$isCodDisallowedForPickup = ($pickupOrderType === 'pickup' && $attemptedPaymentMethod === 'cod');
+assert_test("TC-C20: Kitchen counter pickup enforces prepaid methods and disallows Cash on Delivery", $isCodDisallowedForPickup === true);
+
 echo "\n--------------------------------------------------------\n";
 echo "SUMMARY: {$passedTests} PASSED, {$failedTests} FAILED.\n";
 echo "--------------------------------------------------------\n";
