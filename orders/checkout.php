@@ -16,6 +16,21 @@ require_once __DIR__ . '/../includes/order_functions.php';
 require_login();
 $currentUser = current_user();
 
+// Retrieve user's contact information and saved delivery address from database if available
+if (!empty($currentUser['id']) && $pdo) {
+    try {
+        $uStmt = $pdo->prepare('SELECT phone, address FROM users WHERE id = :id LIMIT 1');
+        $uStmt->execute([':id' => $currentUser['id']]);
+        $uData = $uStmt->fetch(PDO::FETCH_ASSOC);
+        if ($uData) {
+            $currentUser['phone'] = $uData['phone'] ?? '';
+            $currentUser['address'] = $uData['address'] ?? '';
+        }
+    } catch (PDOException $e) {
+        error_log('[Checkout User Fetch Error] ' . $e->getMessage());
+    }
+}
+
 if (empty($_SESSION['cart'])) {
     set_flash('info', 'Your cart is empty. Please add dishes before proceeding to checkout.');
     redirect(url('orders/cart.php'));
@@ -255,8 +270,18 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div class="form-group" id="deliveryAddressGroup" style="margin-bottom: 1.25rem;">
-                    <label for="address" class="form-label">Delivery Address *</label>
-                    <textarea name="address" id="address" class="form-control" rows="2" placeholder="e.g. No. 24, Galle Road, Colombo 03"><?= e($_POST['address'] ?? ($currentUser['address'] ?? '')); ?></textarea>
+                    <div class="address-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label for="address" class="form-label" style="margin-bottom: 0; font-weight: 700;">Delivery Address <span style="color: var(--danger-500);">*</span></label>
+                        <button type="button" 
+                                id="btn-detect-location" 
+                                class="btn-detect-location" 
+                                title="Auto-detect current delivery location">
+                            <span class="btn-icon">📍</span>
+                            <span class="btn-label">Auto-detect location</span>
+                        </button>
+                    </div>
+                    <textarea name="address" id="address" class="form-control <?= !empty($errors['address']) ? 'is-invalid' : ''; ?>" rows="2" placeholder="e.g. No. 24, Galle Road, Colombo 03" required><?= e($_POST['address'] ?? ($currentUser['address'] ?? '')); ?></textarea>
+                    <div id="location-status" class="location-status" style="display: none;"></div>
                     <?php if (!empty($errors['address'])): ?>
                         <div class="field-error"><?= e($errors['address']); ?></div>
                     <?php endif; ?>
@@ -373,16 +398,195 @@ require_once __DIR__ . '/../includes/header.php';
 function toggleDeliveryFields(isDelivery) {
     var group = document.getElementById('deliveryAddressGroup');
     var addressInput = document.getElementById('address');
+    var deliveryFeeLine = document.getElementById('deliveryFeeLine');
     if (group && addressInput) {
         if (isDelivery) {
             group.style.display = 'block';
             addressInput.required = true;
+            if (deliveryFeeLine) deliveryFeeLine.style.display = 'flex';
         } else {
             group.style.display = 'none';
             addressInput.required = false;
+            if (deliveryFeeLine) deliveryFeeLine.style.display = 'none';
         }
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const btnDetectLocation = document.getElementById('btn-detect-location');
+    const addressInput = document.getElementById('address');
+    const locationStatus = document.getElementById('location-status');
+
+    function setLocationStatus(msg, type) {
+        if (!locationStatus) return;
+        if (!msg) {
+            locationStatus.style.display = 'none';
+            locationStatus.className = 'location-status';
+            locationStatus.innerHTML = '';
+            return;
+        }
+        locationStatus.style.display = 'flex';
+        locationStatus.className = 'location-status ' + type;
+        locationStatus.innerHTML = msg;
+    }
+
+    // Network / IP-based location fallback for devices where browser GPS is unavailable or blocked
+    async function fetchIpLocation() {
+        try {
+            const resp = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client');
+            if (resp.ok) {
+                const bdc = await resp.json();
+                const parts = [];
+                if (bdc.locality && bdc.locality !== bdc.city) parts.push(bdc.locality);
+                if (bdc.city) parts.push(bdc.city);
+                if (bdc.principalSubdivision) parts.push(bdc.principalSubdivision);
+                if (bdc.countryName) parts.push(bdc.countryName);
+                if (parts.length > 0) {
+                    return parts.join(', ');
+                }
+            }
+        } catch (e1) {
+            console.warn('BigDataCloud IP fetch:', e1);
+        }
+
+        try {
+            const resp2 = await fetch('https://ipwho.is/');
+            if (resp2.ok) {
+                const data2 = await resp2.json();
+                if (data2 && data2.success) {
+                    const parts2 = [data2.city, data2.region, data2.postal, data2.country].filter(Boolean);
+                    if (parts2.length > 0) {
+                        return parts2.join(', ');
+                    }
+                }
+            }
+        } catch (e2) {
+            console.warn('ipwho.is fetch:', e2);
+        }
+
+        return null;
+    }
+
+    if (btnDetectLocation && addressInput) {
+        btnDetectLocation.addEventListener('click', function () {
+            const iconSpan = btnDetectLocation.querySelector('.btn-icon');
+            const labelSpan = btnDetectLocation.querySelector('.btn-label');
+            const originalIcon = iconSpan ? iconSpan.innerHTML : '📍';
+            const originalText = labelSpan ? labelSpan.textContent : 'Auto-detect location';
+
+            btnDetectLocation.disabled = true;
+            if (iconSpan) iconSpan.innerHTML = '<span class="location-spinner"></span>';
+            if (labelSpan) labelSpan.textContent = 'Detecting location...';
+            setLocationStatus('📡 Acquiring GPS coordinates...', 'info');
+
+            async function handleGpsFailure() {
+                if (labelSpan) labelSpan.textContent = 'Detecting via network...';
+                setLocationStatus('📡 GPS unavailable, detecting via network location...', 'info');
+
+                const ipAddress = await fetchIpLocation();
+                if (ipAddress) {
+                    addressInput.value = ipAddress;
+                    addressInput.classList.remove('is-invalid');
+                    addressInput.focus();
+                    setLocationStatus('✓ Location detected via network! Please add your street & building details.', 'success');
+                    btnDetectLocation.disabled = false;
+                    if (iconSpan) iconSpan.innerHTML = '📍';
+                    if (labelSpan) labelSpan.textContent = 'Re-detect';
+                } else {
+                    setLocationStatus('⚠️ Location could not be detected. Please type your delivery address manually.', 'error');
+                    btnDetectLocation.disabled = false;
+                    if (iconSpan) iconSpan.innerHTML = originalIcon;
+                    if (labelSpan) labelSpan.textContent = originalText;
+                }
+            }
+
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async function (position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        if (labelSpan) labelSpan.textContent = 'Resolving address...';
+                        setLocationStatus('🔍 Finding street address details...', 'info');
+
+                        let resolvedAddress = '';
+
+                        // Primary reverse geocoder: OpenStreetMap Nominatim
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`, {
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data && data.address) {
+                                    const a = data.address;
+                                    const street = [a.house_number, a.building, a.road].filter(Boolean).join(' ');
+                                    const area = a.suburb || a.neighbourhood || a.village || a.residential || '';
+                                    const city = a.city || a.town || a.municipality || a.county || '';
+                                    const postal = a.postcode || '';
+                                    const country = a.country || '';
+
+                                    const parts = [street, area, city, postal, country].filter(Boolean);
+                                    resolvedAddress = parts.length > 0 ? parts.join(', ') : (data.display_name || '');
+                                } else if (data && data.display_name) {
+                                    resolvedAddress = data.display_name;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Nominatim reverse geocode error:', err);
+                        }
+
+                        // Secondary reverse geocoder: BigDataCloud
+                        if (!resolvedAddress) {
+                            try {
+                                const bdcResp = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                                if (bdcResp.ok) {
+                                    const bdcData = await bdcResp.json();
+                                    const parts = [];
+                                    if (bdcData.locality) parts.push(bdcData.locality);
+                                    if (bdcData.city && bdcData.city !== bdcData.locality) parts.push(bdcData.city);
+                                    if (bdcData.principalSubdivision) parts.push(bdcData.principalSubdivision);
+                                    if (bdcData.countryName) parts.push(bdcData.countryName);
+                                    if (parts.length > 0) {
+                                        resolvedAddress = parts.join(', ');
+                                    }
+                                }
+                            } catch (err2) {
+                                console.warn('BigDataCloud geocode fallback error:', err2);
+                            }
+                        }
+
+                        // Tertiary fallback: Lat/Long
+                        if (!resolvedAddress) {
+                            resolvedAddress = `Lat: ${lat.toFixed(5)}, Long: ${lon.toFixed(5)}`;
+                        }
+
+                        addressInput.value = resolvedAddress;
+                        addressInput.classList.remove('is-invalid');
+                        addressInput.focus();
+
+                        setLocationStatus('✓ Location detected! You can edit or add apartment/house numbers manually.', 'success');
+
+                        btnDetectLocation.disabled = false;
+                        if (iconSpan) iconSpan.innerHTML = '📍';
+                        if (labelSpan) labelSpan.textContent = 'Re-detect';
+                    },
+                    function (error) {
+                        console.warn('Browser GPS error code:', error.code, error.message);
+                        handleGpsFailure();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 7000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                handleGpsFailure();
+            }
+        });
+    }
+});
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
