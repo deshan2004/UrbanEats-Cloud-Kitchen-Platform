@@ -20,17 +20,17 @@ if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
     $_SESSION['cart'] = [
         1 => [
             'dish_id' => 1,
-            'name' => 'Chicken Kottu',
+            'name' => 'Classic Chicken Kottu',
             'price' => 1450.00,
             'quantity' => 2,
-            'image' => '🍲'
+            'image' => 'uploads/chicken_kottu.jpg'
         ],
-        5 => [
-            'dish_id' => 5,
-            'name' => 'Mango Lassi',
-            'price' => 550.00,
+        21 => [
+            'dish_id' => 21,
+            'name' => 'UrbanEats Royal Faluda',
+            'price' => 750.00,
             'quantity' => 1,
-            'image' => '🥤'
+            'image' => 'uploads/faluda.jpg'
         ]
     ];
 }
@@ -73,7 +73,7 @@ if ($action === 'increase' && $dishId > 0 && isset($_SESSION['cart'][$dishId])) 
                     'name' => $dish['name'],
                     'price' => (float)$dish['price'],
                     'quantity' => 1,
-                    'image' => '🍲'
+                    'image' => $dish['image_url'] ?? '🍲'
                 ];
             }
             set_flash('success', e($dish['name']) . ' added to cart.');
@@ -171,10 +171,18 @@ require_once __DIR__ . '/../includes/header.php';
                 <div style="divide-y: 1px solid var(--border-default);">
                     <?php foreach ($_SESSION['cart'] as $item): ?>
                         <?php $itemTotal = (float)$item['price'] * (int)$item['quantity']; ?>
+                        <?php 
+                        $imgVal = $item['image'] ?? '';
+                        $isImagePath = (is_string($imgVal) && (strpos($imgVal, '/') !== false || preg_match('/\.(jpg|jpeg|png|webp)$/i', $imgVal)));
+                        ?>
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-default); gap: 1rem; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 1rem; min-width: 200px; flex: 1;">
-                                <div style="width: 52px; height: 52px; border-radius: 12px; background: var(--primary-50); display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
-                                    <?= e($item['image'] ?? '🍲'); ?>
+                                <div style="width: 56px; height: 56px; border-radius: 12px; background: var(--primary-50); display: flex; align-items: center; justify-content: center; font-size: 1.75rem; overflow: hidden; flex-shrink: 0;">
+                                    <?php if ($isImagePath): ?>
+                                        <img src="<?= e(url('public/' . ltrim($imgVal, '/'))); ?>" alt="<?= e($item['name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                    <?php else: ?>
+                                        <?= e($imgVal ?: '🍲'); ?>
+                                    <?php endif; ?>
                                 </div>
                                 <div>
                                     <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--ink-900); margin: 0 0 0.25rem 0;">

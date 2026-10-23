@@ -53,3 +53,13 @@ function verify_csrf_token(?string $token): bool {
 function generate_csrf_token(): string {
     return get_csrf_token();
 }
+
+/**
+ * Backward-compatible alias for template calls that expect csrf_token().
+ *
+ * @return string
+ */
+function csrf_token(): string {
+    return get_csrf_token();
+}
+

@@ -42,6 +42,11 @@ set_exception_handler(function (Throwable $exception) {
         http_response_code(500);
     }
 
+    // Clean any partial output buffer so the error page is self-contained
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>System Error - UrbanEats</title>';
     echo '<style>body{font-family:sans-serif;background:#0d1117;color:#f0f6fc;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}';
     echo '.card{background:#161b22;padding:2.5rem;border-radius:12px;border:1px solid #30363d;max-width:480px;text-align:center;}';
