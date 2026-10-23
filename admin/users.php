@@ -425,7 +425,7 @@ require_once __DIR__ . '/../includes/header.php';
                                         <?php if ((int)$u['is_active'] === 1): ?>
                                             <button type="submit" 
                                                     class="btn btn-ghost btn-sm"
-                                                    onclick="return confirm('Are you sure you want to deactivate <?= e(addslashes($u['full_name'])); ?>?');">
+                                                    data-confirm="Are you sure you want to deactivate <?= e($u['full_name']); ?>?">
                                                 Deactivate
                                             </button>
                                         <?php else: ?>

@@ -167,7 +167,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="hidden" name="action" value="transition">
                                     <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                     <input type="hidden" name="new_status" value="Cancelled">
-                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger-600);" onclick="return confirm('Cancel this order?');" title="Cancel Order">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger-600);" data-confirm="Are you sure you want to cancel this order?" title="Cancel Order">
                                         ✕
                                     </button>
                                 </form>

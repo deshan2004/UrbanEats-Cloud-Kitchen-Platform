@@ -608,7 +608,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <a href="<?= e(url('menu/stock.php?dish_id=' . $d['id'])); ?>" class="btn btn-outline btn-sm" title="Adjust Inventory">
                                     Stock
                                 </a>
-                                <form method="POST" action="<?= e(url('menu/manage_dishes.php')); ?>" style="display: inline;" onsubmit="return confirm('<?= $isActive ? 'Soft-delete this dish? It will be hidden from the public menu but historical order records will remain intact.' : 'Restore this dish to active public menu?'; ?>');">
+                                <form method="POST" action="<?= e(url('menu/manage_dishes.php')); ?>" style="display: inline;" data-confirm-form="<?= $isActive ? 'Soft-delete this dish? It will be hidden from the public menu but historical order records will remain intact.' : 'Restore this dish to active public menu?'; ?>">
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="toggle_active">
                                     <input type="hidden" name="dish_id" value="<?= e((string)$d['id']); ?>">

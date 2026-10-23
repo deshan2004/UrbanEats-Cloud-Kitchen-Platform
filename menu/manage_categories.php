@@ -353,7 +353,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <a href="<?= e(url('menu/manage_categories.php?edit=' . $c['id'])); ?>" class="btn btn-secondary btn-sm">
                                     Edit
                                 </a>
-                                <form method="POST" action="<?= e(url('menu/manage_categories.php')); ?>" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this category? (Will fail if dishes are assigned)');">
+                                <form method="POST" action="<?= e(url('menu/manage_categories.php')); ?>" style="display: inline;" data-confirm-form="Are you sure you want to delete this category? (Will fail if dishes are assigned)">
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete_category">
                                     <input type="hidden" name="category_id" value="<?= e((string)$c['id']); ?>">

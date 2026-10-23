@@ -163,7 +163,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="card" style="padding: 0; overflow: hidden;">
                 <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
                     <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--ink-900); margin: 0;">Order Items</h2>
-                    <a href="<?= e(url('orders/cart.php?action=clear')); ?>" style="color: var(--danger-600); font-size: 0.88rem; font-weight: 600; text-decoration: none;" onclick="return confirm('Clear all items from your cart?');">
+                    <a href="<?= e(url('orders/cart.php?action=clear')); ?>" style="color: var(--danger-600); font-size: 0.88rem; font-weight: 600; text-decoration: none;" data-confirm="Are you sure you want to clear all items from your cart?">
                         Clear Cart
                     </a>
                 </div>
@@ -208,7 +208,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <span style="font-weight: 800; color: var(--ink-900); font-size: 1.05rem; min-width: 100px; text-align: right;">
                                     LKR <?= number_format($itemTotal, 2); ?>
                                 </span>
-                                <a href="<?= e(url('orders/cart.php?action=remove&dish_id=' . (int)$item['dish_id'])); ?>" style="color: var(--ink-400); font-size: 1.1rem; text-decoration: none;" title="Remove item" onclick="return confirm('Remove this item?');">
+                                <a href="<?= e(url('orders/cart.php?action=remove&dish_id=' . (int)$item['dish_id'])); ?>" style="color: var(--ink-400); font-size: 1.1rem; text-decoration: none; cursor: pointer; padding: 4px;" title="Remove item" data-confirm="Are you sure you want to remove this item from your cart?">
                                     🗑️
                                 </a>
                             </div>
