@@ -74,6 +74,16 @@ if ($currentUser) {
                                id="nav-admin-audit">Audit Log</a>
                         </li>
                         <li>
+                            <a href="<?= e(url('admin/reports.php')); ?>" 
+                               class="nav-link <?= str_contains($currentScript, 'admin/reports') ? 'active' : ''; ?>" 
+                               id="nav-admin-reports">Reports</a>
+                        </li>
+                        <li>
+                            <a href="<?= e(url('orders/kitchen_queue.php')); ?>" 
+                               class="nav-link <?= str_contains($currentScript, 'kitchen_queue') ? 'active' : ''; ?>" 
+                               id="nav-admin-queue">Order Queue</a>
+                        </li>
+                        <li>
                             <div class="header-user-badge">
                                 <span class="header-role-text">Administrator</span>
                                 <a href="<?= e(url('auth/profile.php')); ?>" title="View Profile: <?= e($currentUser['full_name']); ?>">
@@ -142,6 +152,16 @@ if ($currentUser) {
                     <li>
                         <a href="<?= e(url('index.php')); ?>" class="nav-link <?= str_contains($currentScript, 'index.php') ? 'active' : ''; ?>" id="nav-guest-menu">
                             Menu
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= e(url('orders/cart.php')); ?>" class="nav-link <?= str_contains($currentScript, 'cart.php') ? 'active' : ''; ?>" id="nav-guest-cart">
+                            Cart (<?= e((string)(count($_SESSION['cart'] ?? []))); ?>)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= e(url('orders/tracking.php')); ?>" class="nav-link <?= str_contains($currentScript, 'tracking') ? 'active' : ''; ?>" id="nav-guest-track">
+                            Track Order
                         </a>
                     </li>
                     <li>

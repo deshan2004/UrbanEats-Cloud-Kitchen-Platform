@@ -1,7 +1,7 @@
 <?php
 /**
  * UrbanEats Cloud Kitchen Platform
- * Landing Portal (Component A)
+ * Landing Portal (Unified Platform Ecosystem)
  * 
  * Provides an entry portal for the three platform user personas:
  * Customer, Kitchen Staff, and Administrator.
@@ -9,12 +9,37 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/errors.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
 $pageTitle = 'Home';
 $currentUser = current_user();
+
+// Fetch popular active dishes for the homepage showcase (Component B)
+$featuredDishes = [];
+if (isset($pdo)) {
+    try {
+        $featStmt = $pdo->query(
+            "SELECT d.dish_id, d.dish_id AS id, d.name, d.price, d.image_url, d.description, 
+                    COALESCE(d.prep_time_minutes, 15) AS prep_time_minutes,
+                    COALESCE(c.name, 'Specialty') AS category_name, 
+                    COALESCE(c.icon, '🍲') AS category_icon,
+                    COALESCE(d.stock_quantity, COALESCE(i.quantity, 0)) AS stock_quantity,
+                    COALESCE(i.reorder_level, 10) AS reorder_level
+             FROM dishes d
+             LEFT JOIN categories c ON c.category_id = d.category_id OR c.id = d.category_id
+             LEFT JOIN inventory i ON i.dish_id = d.dish_id
+             WHERE d.is_active = 1
+             ORDER BY d.dish_id ASC
+             LIMIT 3"
+        );
+        $featuredDishes = $featStmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log("[Index Featured Dishes] " . $e->getMessage());
+    }
+}
 
 require_once __DIR__ . '/includes/header.php';
 ?>
@@ -49,12 +74,21 @@ require_once __DIR__ . '/includes/header.php';
                         Admin Dashboard
                     </a>
                 <?php elseif ($currentUser['role'] === 'kitchen_staff'): ?>
-                    <a href="<?= e(url('auth/profile.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
-                        Kitchen Staff Account &rarr;
+                    <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Kitchen Order Queue &rarr;
+                    </a>
+                    <a href="<?= e(url('menu/stock.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Stock Dashboard
                     </a>
                 <?php else: ?>
-                    <a href="<?= e(url('auth/profile.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
-                        My Account Settings &rarr;
+                    <a href="<?= e(url('menu/index.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Browse Menu &rarr;
+                    </a>
+                    <a href="<?= e(url('orders/cart.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        My Cart
+                    </a>
+                    <a href="<?= e(url('orders/tracking.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Track Order
                     </a>
                 <?php endif; ?>
             <?php endif; ?>
@@ -75,7 +109,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
         
-        <!-- Component A Card (Identity & Access) -->
+        <!-- Component A Card (Identity & Access - Student 1) -->
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -104,11 +138,11 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Component B Card (Menu & Inventory - Student 2) -->
-        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <!-- Component B Card (Menu & Inventory - Student 2: Chanula) -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(242, 107, 29, 0.4);">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <span style="background: var(--warning-100); color: var(--warning-500); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-full); text-transform: uppercase;">
+                    <span style="background: var(--warning-100); color: #8c5700; font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: var(--radius-full); text-transform: uppercase;">
                         Component B (Student 2)
                     </span>
                     <span style="font-size: 1.5rem;">🍲</span>
@@ -117,17 +151,28 @@ require_once __DIR__ . '/includes/header.php';
                     Menu, Catalogue &amp; Stock
                 </h3>
                 <p style="font-size: 0.9rem; color: var(--ink-500); line-height: 1.5; margin-bottom: 1.25rem;">
-                    Dishes catalogue, categories, image uploads, search/filtering, and real-time inventory adjustments with low-stock tracking.
+                    Filterable catalogue with whitelisted sorting, category tabs, secure image uploads, and real-time inventory engine with low-stock alerts.
                 </p>
             </div>
             <div>
-                <span class="btn btn-secondary btn-block btn-sm" style="opacity: 0.7; cursor: default; background: var(--bg-page); border-color: var(--border-default); color: var(--ink-500);">
-                    Assigned to Student 2
-                </span>
+                <?php if ($currentUser && in_array($currentUser['role'], ['kitchen_staff', 'admin'], true)): ?>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                        <a href="<?= e(url('menu/manage_dishes.php')); ?>" class="btn btn-primary btn-block btn-sm">
+                            Manage Dishes
+                        </a>
+                        <a href="<?= e(url('menu/stock.php')); ?>" class="btn btn-secondary btn-block btn-sm">
+                            Stock Dashboard
+                        </a>
+                    </div>
+                <?php else: ?>
+                    <a href="<?= e(url('menu/index.php')); ?>" class="btn btn-primary btn-block btn-sm" id="btn-home-explore-menu">
+                        Explore Full Menu &rarr;
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
 
-        <!-- Component C Card (Ordering & Tracking - Student 3) -->
+        <!-- Component C Card (Ordering & Tracking - Student 3: Thilakshi) -->
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -144,13 +189,86 @@ require_once __DIR__ . '/includes/header.php';
                 </p>
             </div>
             <div>
-                <span class="btn btn-secondary btn-block btn-sm" style="opacity: 0.7; cursor: default; background: var(--bg-page); border-color: var(--border-default); color: var(--ink-500);">
-                    Assigned to Student 3
-                </span>
+                <a href="<?= e(url('orders/cart.php')); ?>" class="btn btn-secondary btn-block btn-sm">
+                    View Shopping Cart &rarr;
+                </a>
             </div>
         </div>
 
     </div>
 </div>
+
+<!-- Featured Chef Specials (Component B Showcase) -->
+<?php if (!empty($featuredDishes)): ?>
+    <div style="margin-bottom: 3.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600); letter-spacing: 0.05em;">
+                    Chef's Daily Specials &bull; Fresh from the Kitchen
+                </span>
+                <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--ink-900); margin-top: 0.2rem;">
+                    Popular Customer Favorites
+                </h2>
+            </div>
+            <a href="<?= e(url('menu/index.php')); ?>" class="btn btn-outline btn-sm">
+                View All Dishes &rarr;
+            </a>
+        </div>
+
+        <div class="menu-grid" style="margin-bottom: 0;">
+            <?php foreach ($featuredDishes as $fd): 
+                $fQty = (int)$fd['stock_quantity'];
+                $fReorder = (int)$fd['reorder_level'];
+                if ($fQty <= 0) {
+                    $fStatus = '<span class="stock-badge stock-badge-out"><span class="dot"></span>Sold Out</span>';
+                } elseif ($fQty <= $fReorder) {
+                    $fStatus = '<span class="stock-badge stock-badge-low"><span class="dot"></span>Only ' . $fQty . ' Left!</span>';
+                } else {
+                    $fStatus = '<span class="stock-badge stock-badge-in"><span class="dot"></span>In Stock (' . $fQty . ')</span>';
+                }
+                $fImg = !empty($fd['image_url']) ? url('public/' . ltrim($fd['image_url'], '/')) : url('public/uploads/chicken_kottu.jpg');
+            ?>
+                <article class="dish-card">
+                    <div class="dish-media">
+                        <img src="<?= e($fImg); ?>" alt="<?= e($fd['name']); ?>" loading="lazy" onerror="this.src='<?= e(url('public/uploads/chicken_kottu.jpg')); ?>'">
+                        <div class="dish-stock-overlay">
+                            <?= $fStatus; ?>
+                        </div>
+                        <div class="dish-prep-overlay">
+                            ⏱️ <?= e((string)$fd['prep_time_minutes']); ?> mins
+                        </div>
+                    </div>
+                    <div class="dish-content">
+                        <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600); margin-bottom: 0.25rem;">
+                            <?= e($fd['category_icon'] . ' ' . $fd['category_name']); ?>
+                        </div>
+                        <h3 class="dish-title">
+                            <a href="<?= e(url('menu/detail.php?id=' . $fd['dish_id'])); ?>">
+                                <?= e($fd['name']); ?>
+                            </a>
+                        </h3>
+                        <p class="dish-description">
+                            <?= e($fd['description'] ?? ''); ?>
+                        </p>
+                        <div class="dish-footer">
+                            <div class="dish-price-block">
+                                <span class="dish-price-currency">Price</span>
+                                <span class="dish-price-value"><?= e(format_price($fd['price'])); ?></span>
+                            </div>
+                            <div style="display: flex; gap: 0.4rem;">
+                                <a href="<?= e(url('menu/detail.php?id=' . $fd['dish_id'])); ?>" class="btn btn-secondary btn-sm">
+                                    Details
+                                </a>
+                                <a href="<?= e(url('orders/cart.php?action=add&dish_id=' . (int)$fd['dish_id'])); ?>" class="btn btn-primary btn-sm">
+                                    + Cart
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
