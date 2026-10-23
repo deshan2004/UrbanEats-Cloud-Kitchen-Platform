@@ -136,6 +136,31 @@ if ($currentUser) {
                                 Cart (<?= e((string)(count($_SESSION['cart'] ?? []))); ?>)
                             </a>
                         </li>
+                        <li style="position: relative;">
+                            <button type="button" id="ue-user-bell-btn" class="nav-link" style="background: none; border: none; cursor: pointer; position: relative; padding: 0.35rem 0.55rem; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: var(--ink-700); line-height: 1;" title="Order Notifications">
+                                <span>🔔</span>
+                                <span id="ue-user-bell-badge" style="display: none; position: absolute; top: 1px; right: 2px; width: 9px; height: 9px; border-radius: 50%; background: #EF4444; border: 2px solid #FFFFFF; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);"></span>
+                            </button>
+                            <!-- Live Order Notifications Dropdown -->
+                            <div id="ue-user-bell-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 10px; width: 340px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-default); border-radius: 14px; box-shadow: 0 16px 36px rgba(0,0,0,0.12); z-index: 999999; padding: 0.85rem 0; font-family: var(--font-family);">
+                                <div style="padding: 0 1rem 0.6rem; border-bottom: 1px solid var(--border-default); display: flex; justify-content: space-between; align-items: center;">
+                                    <strong style="font-size: 0.9rem; color: var(--ink-900);">Order Notifications</strong>
+                                    <span style="font-size: 0.72rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; background: rgba(16,185,129,0.1); padding: 0.15rem 0.5rem; border-radius: 9999px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10B981;"></span> Live Updates
+                                    </span>
+                                </div>
+                                <div id="ue-user-notifications-list" style="max-height: 280px; overflow-y: auto; padding: 0.4rem 0;">
+                                    <div style="padding: 1.5rem 1rem; text-align: center; color: var(--ink-500); font-size: 0.82rem;">
+                                        Loading order updates...
+                                    </div>
+                                </div>
+                                <div style="padding: 0.6rem 1rem 0.2rem; border-top: 1px solid var(--border-default); text-align: center;">
+                                    <a href="<?= e(url('orders/history.php')); ?>" style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-decoration: none;">
+                                        View Full Order History &rarr;
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
                         <li>
                             <a href="<?= e(url('auth/profile.php')); ?>" title="View Profile: <?= e($currentUser['full_name']); ?>">
                                 <span class="user-avatar-circle"><?= e($userInitials); ?></span>

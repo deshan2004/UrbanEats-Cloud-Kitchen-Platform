@@ -610,6 +610,79 @@ declare(strict_types=1);
         setTimeout(dismiss, 14000);
     }
 
+    function updateDropdownAndBadge(orders) {
+        const listElem = document.getElementById('ue-user-notifications-list');
+        const badgeElem = document.getElementById('ue-user-bell-badge');
+
+        if (!listElem) return;
+
+        if (!orders || orders.length === 0) {
+            listElem.innerHTML = `
+                <div style="padding: 1.5rem 1rem; text-align: center; color: var(--ink-500); font-size: 0.82rem;">
+                    No active order updates right now.
+                </div>
+            `;
+            if (badgeElem) badgeElem.style.display = 'none';
+            return;
+        }
+
+        let unreadCount = 0;
+        let html = '';
+
+        orders.forEach(order => {
+            const hasSeen = localStorage.getItem('ue_seen_status_' + order.order_id) === order.status;
+            if (!hasSeen && ['Preparing', 'Ready', 'Out for Delivery', 'Completed'].includes(order.status)) {
+                unreadCount++;
+            }
+
+            html += `
+                <a href="${order.tracking_url}" style="display: block; padding: 0.65rem 1rem; border-bottom: 1px solid rgba(0,0,0,0.06); text-decoration: none; transition: background 0.15s ease; color: inherit;" onmouseover="this.style.background='rgba(0,0,0,0.02)'" onmouseout="this.style.background='transparent'">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.2rem;">
+                        <span style="font-weight: 800; font-size: 0.82rem; color: ${order.theme_color || '#10B981'};">
+                            ${order.icon || '🔔'} ${order.status_title || order.status}
+                        </span>
+                        <span style="font-size: 0.72rem; color: var(--ink-400); font-family: monospace;">#${order.order_code}</span>
+                    </div>
+                    <div style="font-size: 0.78rem; color: var(--ink-700); line-height: 1.35; margin-bottom: 0.25rem;">
+                        ${order.status_message}
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--ink-400);">
+                        ${order.items_summary} &bull; ${order.total_formatted}
+                    </div>
+                </a>
+            `;
+        });
+
+        listElem.innerHTML = html;
+
+        if (badgeElem) {
+            badgeElem.style.display = unreadCount > 0 ? 'block' : 'none';
+        }
+    }
+
+    function setupBellDropdown() {
+        const bellBtn = document.getElementById('ue-user-bell-btn');
+        const dropdown = document.getElementById('ue-user-bell-dropdown');
+        const badge = document.getElementById('ue-user-bell-badge');
+
+        if (!bellBtn || !dropdown) return;
+
+        bellBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const isOpen = dropdown.style.display === 'block';
+            dropdown.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen && badge) {
+                badge.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && e.target !== bellBtn) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
     async function pollCustomerOrders() {
         try {
             const res = await fetch(customerOrdersUrl, { credentials: 'same-origin' });
@@ -617,24 +690,30 @@ declare(strict_types=1);
             const data = await res.json();
             if (!data || !data.success || !Array.isArray(data.orders)) return;
 
-            data.orders.forEach(order => {
-                const prev = knownStatusMap.get(order.order_id);
-                if (!isInitialLoad && prev && prev !== order.status) {
-                    playCustomerChime();
-                    showCustomerToast(order);
-                }
-                knownStatusMap.set(order.order_id, order.status);
-            });
+            updateDropdownAndBadge(data.orders);
 
-            isInitialLoad = false;
+            data.orders.forEach(order => {
+                const storageKey = 'ue_seen_status_' + order.order_id;
+                const lastSeen = localStorage.getItem(storageKey);
+
+                if (lastSeen !== order.status) {
+                    localStorage.setItem(storageKey, order.status);
+
+                    if (order.status !== 'Cancelled') {
+                        playCustomerChime();
+                        showCustomerToast(order);
+                    }
+                }
+            });
         } catch (e) {
             console.warn('[Customer Poll Note]', e);
         }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+        setupBellDropdown();
         pollCustomerOrders();
-        setInterval(pollCustomerOrders, 5000);
+        setInterval(pollCustomerOrders, 4000);
     });
 })();
 </script>
