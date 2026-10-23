@@ -1,7 +1,7 @@
 <?php
 /**
  * UrbanEats Cloud Kitchen Platform
- * Landing Portal
+ * Landing Portal (Unified Platform Ecosystem)
  * 
  * Provides an entry portal for the three platform user personas:
  * Customer, Kitchen Staff, and Administrator.
@@ -17,20 +17,22 @@ require_once __DIR__ . '/includes/auth.php';
 $pageTitle = 'Home';
 $currentUser = current_user();
 
-// Fetch 3 popular active dishes for the homepage showcase (Component B)
+// Fetch popular active dishes for the homepage showcase (Component B)
 $featuredDishes = [];
 if (isset($pdo)) {
     try {
         $featStmt = $pdo->query(
-            "SELECT d.id, d.name, d.price, d.image_url, d.description, d.prep_time_minutes,
-                    c.name AS category_name, c.icon AS category_icon,
-                    COALESCE(i.quantity, 0) AS stock_quantity,
+            "SELECT d.dish_id, d.dish_id AS id, d.name, d.price, d.image_url, d.description, 
+                    COALESCE(d.prep_time_minutes, 15) AS prep_time_minutes,
+                    COALESCE(c.name, 'Specialty') AS category_name, 
+                    COALESCE(c.icon, '🍲') AS category_icon,
+                    COALESCE(d.stock_quantity, COALESCE(i.quantity, 0)) AS stock_quantity,
                     COALESCE(i.reorder_level, 10) AS reorder_level
              FROM dishes d
-             JOIN categories c ON c.id = d.category_id
-             LEFT JOIN inventory i ON i.dish_id = d.id
+             LEFT JOIN categories c ON c.category_id = d.category_id OR c.id = d.category_id
+             LEFT JOIN inventory i ON i.dish_id = d.dish_id
              WHERE d.is_active = 1
-             ORDER BY d.id ASC
+             ORDER BY d.dish_id ASC
              LIMIT 3"
         );
         $featuredDishes = $featStmt->fetchAll();
@@ -75,8 +77,8 @@ require_once __DIR__ . '/includes/header.php';
                     <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
                         Kitchen Order Queue &rarr;
                     </a>
-                    <a href="<?= e(url('auth/profile.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
-                        Staff Profile
+                    <a href="<?= e(url('menu/stock.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Stock Dashboard
                     </a>
                 <?php else: ?>
                     <a href="<?= e(url('menu/index.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
@@ -107,7 +109,7 @@ require_once __DIR__ . '/includes/header.php';
 
     <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
         
-        <!-- Component A Card (Identity & Access - Student 1: Deshan) -->
+        <!-- Component A Card (Identity & Access - Student 1) -->
         <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -241,21 +243,26 @@ require_once __DIR__ . '/includes/header.php';
                             <?= e($fd['category_icon'] . ' ' . $fd['category_name']); ?>
                         </div>
                         <h3 class="dish-title">
-                            <a href="<?= e(url('menu/detail.php?id=' . $fd['id'])); ?>">
+                            <a href="<?= e(url('menu/detail.php?id=' . $fd['dish_id'])); ?>">
                                 <?= e($fd['name']); ?>
                             </a>
                         </h3>
                         <p class="dish-description">
-                            <?= e($fd['description']); ?>
+                            <?= e($fd['description'] ?? ''); ?>
                         </p>
                         <div class="dish-footer">
                             <div class="dish-price-block">
                                 <span class="dish-price-currency">Price</span>
                                 <span class="dish-price-value"><?= e(format_price($fd['price'])); ?></span>
                             </div>
-                            <a href="<?= e(url('menu/detail.php?id=' . $fd['id'])); ?>" class="btn btn-secondary btn-sm">
-                                View Details &rarr;
-                            </a>
+                            <div style="display: flex; gap: 0.4rem;">
+                                <a href="<?= e(url('menu/detail.php?id=' . $fd['dish_id'])); ?>" class="btn btn-secondary btn-sm">
+                                    Details
+                                </a>
+                                <a href="<?= e(url('orders/cart.php?action=add&dish_id=' . (int)$fd['dish_id'])); ?>" class="btn btn-primary btn-sm">
+                                    + Cart
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </article>
