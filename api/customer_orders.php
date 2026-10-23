@@ -57,53 +57,87 @@ try {
     $orders = [];
     foreach ($rows as $r) {
         $status = $r['status'];
+        $isPickup = ($r['order_type'] === 'pickup');
+        $statusTitle = 'Order Update';
         $statusMsg = 'Order placed';
         $icon = '📋';
+        $themeColor = '#F26B1D';
+        $isDeliveredFeedback = false;
 
         switch ($status) {
             case 'Placed':
-                $statusMsg = 'Order received & waiting for kitchen approval';
+                $statusTitle = '⏳ Order Received';
+                $statusMsg = 'Your order is waiting for kitchen confirmation.';
                 $icon = '⏳';
+                $themeColor = '#D97706';
                 break;
             case 'Preparing':
-                $statusMsg = 'Order approved! The kitchen is cooking your meal';
+                $statusTitle = '🍳 Order Approved & Cooking!';
+                $statusMsg = 'The chef has accepted your order and is cooking your dishes fresh!';
                 $icon = '🍳';
+                $themeColor = '#059669';
                 break;
             case 'Ready':
-                $statusMsg = ($r['order_type'] === 'pickup') 
-                    ? 'Your meal is ready for counter pickup!' 
-                    : 'Order packaged & awaiting rider dispatch!';
-                $icon = '📦';
+                if ($isPickup) {
+                    $statusTitle = '🏪 Ready for Kitchen Pickup!';
+                    $statusMsg = 'Your order is packaged and waiting at our kitchen counter. Please come collect it!';
+                    $icon = '🏪';
+                    $themeColor = '#0D9488';
+                } else {
+                    $statusTitle = '📦 Packaged & Quality Checked';
+                    $statusMsg = 'Your meal is packed and our rider is being assigned for pickup.';
+                    $icon = '📦';
+                    $themeColor = '#059669';
+                }
                 break;
             case 'Out for Delivery':
-                $statusMsg = 'Our rider is on the way to your address!';
+                $statusTitle = '🛵 Out for Delivery!';
+                $statusMsg = 'Our rider is on the way with your order! Keep your phone nearby.';
                 $icon = '🛵';
+                $themeColor = '#2563EB';
                 break;
             case 'Collected':
-                $statusMsg = 'Order handed over at kitchen counter!';
-                $icon = '🏪';
+                $statusTitle = '🏪 Order Handed Over & Collected';
+                $statusMsg = 'Thank you for picking up your food! Have a wonderful meal!';
+                $icon = '🍽️';
+                $themeColor = '#10B981';
                 break;
             case 'Completed':
-                $statusMsg = 'Order fulfilled! Enjoy your meal!';
-                $icon = '🍽️';
+                if (!$isPickup) {
+                    $statusTitle = '🍽️ Order Delivered! Did you receive it?';
+                    $statusMsg = 'Your delivery is completed. Has your order arrived safely? Enjoy your meal!';
+                    $icon = '🛵';
+                    $themeColor = '#10B981';
+                    $isDeliveredFeedback = true;
+                } else {
+                    $statusTitle = '🍽️ Order Completed!';
+                    $statusMsg = 'Counter pickup complete. Thank you for dining with UrbanEats!';
+                    $icon = '🍽️';
+                    $themeColor = '#10B981';
+                }
                 break;
             case 'Cancelled':
+                $statusTitle = '✕ Order Cancelled';
                 $statusMsg = 'This order has been cancelled.';
                 $icon = '✕';
+                $themeColor = '#DC2626';
                 break;
         }
 
         $orders[] = [
-            'order_id'        => (int)$r['order_id'],
-            'order_code'      => $r['order_code'],
-            'status'          => $status,
-            'status_message'  => $statusMsg,
-            'icon'            => $icon,
-            'order_type'      => $r['order_type'],
-            'total_formatted' => 'LKR ' . number_format((float)$r['total_amount'], 2),
-            'items_summary'   => $r['items_summary'] ?: 'Kitchen Dishes',
-            'updated_at'      => $r['updated_at'],
-            'tracking_url'    => url('orders/tracking.php?code=' . urlencode($r['order_code'])),
+            'order_id'              => (int)$r['order_id'],
+            'order_code'            => $r['order_code'],
+            'status'                => $status,
+            'status_title'          => $statusTitle,
+            'status_message'        => $statusMsg,
+            'icon'                  => $icon,
+            'theme_color'           => $themeColor,
+            'is_delivered_feedback' => $isDeliveredFeedback,
+            'order_type'            => $r['order_type'],
+            'total_formatted'       => 'LKR ' . number_format((float)$r['total_amount'], 2),
+            'items_summary'         => $r['items_summary'] ?: 'Kitchen Dishes',
+            'updated_at'            => $r['updated_at'],
+            'tracking_url'          => url('orders/tracking.php?code=' . urlencode($r['order_code'])),
         ];
     }
 

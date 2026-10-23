@@ -15,24 +15,9 @@ require_once __DIR__ . '/../includes/order_functions.php';
 
 $currentUser = current_user();
 
-// Initialize session cart if not set or seed with default sample items for demo
-if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) {
-    $_SESSION['cart'] = [
-        1 => [
-            'dish_id' => 1,
-            'name' => 'Classic Chicken Kottu',
-            'price' => 1450.00,
-            'quantity' => 2,
-            'image' => 'uploads/chicken_kottu.jpg'
-        ],
-        21 => [
-            'dish_id' => 21,
-            'name' => 'UrbanEats Royal Faluda',
-            'price' => 750.00,
-            'quantity' => 1,
-            'image' => 'uploads/faluda.jpg'
-        ]
-    ];
+// Initialize session cart as clean empty array if not set
+if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+    $_SESSION['cart'] = [];
 }
 
 // Handle cart actions (increase, decrease, remove, clear, add)

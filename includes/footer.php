@@ -529,43 +529,58 @@ declare(strict_types=1);
         if (!container) {
             container = document.createElement('div');
             container.id = 'ue-customer-toast-container';
-            container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;gap:10px;max-width:390px;width:calc(100vw - 48px);pointer-events:none;';
+            container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;gap:12px;max-width:400px;width:calc(100vw - 48px);pointer-events:none;';
             document.body.appendChild(container);
         }
 
         const toast = document.createElement('div');
-        toast.style.cssText = 'pointer-events:auto;background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);border:1px solid #10B981;border-left:6px solid #10B981;border-radius:14px;box-shadow:0 18px 40px -10px rgba(16,185,129,0.3);padding:1rem 1.15rem;color:#1F2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transform:translateY(50px);opacity:0;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);';
+        const themeColor = order.theme_color || '#10B981';
+        toast.style.cssText = `pointer-events:auto;background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);border:1px solid ${themeColor};border-left:6px solid ${themeColor};border-radius:14px;box-shadow:0 18px 40px -10px rgba(0,0,0,0.18);padding:1.1rem 1.25rem;color:#1F2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transform:translateY(50px);opacity:0;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);`;
 
-        let title = 'Order Update';
-        let titleColor = '#059669';
-        if (order.status === 'Preparing') {
-            title = '🎉 Order Approved & Cooking!';
-        } else if (order.status === 'Ready') {
-            title = '🔔 Order Packaged & Ready!';
-        } else if (order.status === 'Out for Delivery') {
-            title = '🛵 Order On The Way!';
-        } else if (order.status === 'Completed') {
-            title = '🍽️ Order Delivered!';
+        let actionHtml = '';
+        if (order.is_delivered_feedback) {
+            actionHtml = `
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;align-items:center;">
+                    <button type="button" class="ue-cust-received-btn" style="background:linear-gradient(135deg, #10B981, #059669);color:#FFFFFF !important;border:none;font-size:0.8rem;font-weight:800;padding:0.42rem 0.85rem;border-radius:6px;cursor:pointer;box-shadow:0 2px 6px rgba(16,185,129,0.3);">
+                        ✓ Yes, I Received It!
+                    </button>
+                    <a href="${order.tracking_url}" style="background:#F26B1D;color:#FFFFFF !important;text-decoration:none;font-size:0.8rem;font-weight:700;padding:0.42rem 0.85rem;border-radius:6px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
+                        Receipt &rarr;
+                    </a>
+                </div>
+            `;
+        } else if (order.order_type === 'pickup' && order.status === 'Ready') {
+            actionHtml = `
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                    <a href="${order.tracking_url}" style="background:linear-gradient(135deg, #0D9488, #059669);color:#FFFFFF !important;text-decoration:none;font-size:0.82rem;font-weight:800;padding:0.42rem 0.95rem;border-radius:6px;box-shadow:0 2px 8px rgba(13,148,136,0.35);display:inline-flex;align-items:center;gap:0.35rem;">
+                        <span>🏪</span> Show Pickup Code &rarr;
+                    </a>
+                </div>
+            `;
+        } else {
+            actionHtml = `
+                <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                    <a href="${order.tracking_url}" style="background:linear-gradient(135deg, #F26B1D, #D9570F);color:#FFFFFF !important;text-decoration:none;font-size:0.8rem;font-weight:700;padding:0.42rem 0.85rem;border-radius:6px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
+                        Track Live Status &rarr;
+                    </a>
+                </div>
+            `;
         }
 
         toast.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.35rem;">
-                <div style="font-weight:800;font-size:0.95rem;color:${titleColor};display:flex;align-items:center;gap:0.4rem;">
-                    <span>${order.icon || '🔔'}</span> ${title}
+                <div style="font-weight:800;font-size:0.95rem;color:${themeColor};display:flex;align-items:center;gap:0.4rem;">
+                    <span>${order.icon || '🔔'}</span> ${order.status_title || 'Order Update'}
                 </div>
                 <button type="button" class="ue-cust-toast-close" style="background:none;border:none;font-size:1.15rem;cursor:pointer;color:#9CA3AF;line-height:1;padding:0 3px;">&times;</button>
             </div>
-            <div style="font-size:0.86rem;color:#374151;margin-bottom:0.35rem;line-height:1.4;">
+            <div style="font-size:0.86rem;color:#374151;margin-bottom:0.4rem;line-height:1.45;">
                 ${order.status_message}
             </div>
-            <div style="font-size:0.78rem;color:#6B7280;margin-bottom:0.65rem;">
+            <div style="font-size:0.78rem;color:#6B7280;margin-bottom:0.75rem;">
                 Order <strong style="color:#F26B1D;font-family:monospace;">#${order.order_code}</strong> &bull; ${order.total_formatted}
             </div>
-            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
-                <a href="${order.tracking_url}" style="background:linear-gradient(135deg, #F26B1D, #D9570F);color:#FFFFFF !important;text-decoration:none;font-size:0.8rem;font-weight:700;padding:0.4rem 0.85rem;border-radius:6px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
-                    Track Live Progress &rarr;
-                </a>
-            </div>
+            ${actionHtml}
         `;
 
         container.appendChild(toast);
@@ -582,7 +597,17 @@ declare(strict_types=1);
 
         const closeBtn = toast.querySelector('.ue-cust-toast-close');
         if (closeBtn) closeBtn.addEventListener('click', dismiss);
-        setTimeout(dismiss, 10000);
+
+        const receivedBtn = toast.querySelector('.ue-cust-received-btn');
+        if (receivedBtn) {
+            receivedBtn.addEventListener('click', function () {
+                receivedBtn.style.background = '#059669';
+                receivedBtn.innerHTML = '✓ Thank You! Enjoy Your Meal 🍽️';
+                setTimeout(dismiss, 1200);
+            });
+        }
+
+        setTimeout(dismiss, 14000);
     }
 
     async function pollCustomerOrders() {
