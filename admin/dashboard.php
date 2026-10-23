@@ -287,12 +287,13 @@ require_once __DIR__ . '/../includes/header.php';
                             <th>Fulfillment</th>
                             <th>Total Amount</th>
                             <th>Status</th>
+                            <th style="text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($liveIncomingOrders)): ?>
                             <tr>
-                                <td colspan="5" style="text-align: center; color: var(--ink-500); padding: 2.5rem;">
+                                <td colspan="6" style="text-align: center; color: var(--ink-500); padding: 2.5rem;">
                                     No live orders currently in processing.
                                 </td>
                             </tr>
@@ -335,6 +336,23 @@ require_once __DIR__ . '/../includes/header.php';
                                         <span style="display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: var(--radius-full); color: <?= $sColor; ?>; background: <?= $sBg; ?>;">
                                             <?= e($s); ?>
                                         </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <?php if ($s === 'Placed'): ?>
+                                            <form method="POST" action="<?= e(url('orders/kitchen_queue.php')); ?>" style="display: inline-block; margin: 0;">
+                                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()); ?>">
+                                                <input type="hidden" name="action" value="transition">
+                                                <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
+                                                <input type="hidden" name="new_status" value="Preparing">
+                                                <button type="submit" class="btn btn-sm" style="background: linear-gradient(135deg, #10B981, #059669); color: #FFFFFF !important; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 6px; border: none; font-size: 0.76rem; box-shadow: 0 2px 6px rgba(16,185,129,0.3); cursor: pointer;">
+                                                    ✅ Approve
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <a href="<?= e(url('orders/kitchen_queue.php')); ?>" class="btn btn-sm btn-secondary" style="font-size: 0.76rem; padding: 0.35rem 0.65rem; border-radius: 6px;">
+                                                Manage &rarr;
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

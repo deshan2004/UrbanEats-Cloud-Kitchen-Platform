@@ -218,8 +218,8 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="hidden" name="action" value="transition">
                                     <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                     <input type="hidden" name="new_status" value="Preparing">
-                                    <button type="submit" class="btn btn-primary btn-sm btn-block" style="font-weight: 700; padding: 0.55rem 0.75rem;">
-                                        Start Preparing &rarr;
+                                    <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: linear-gradient(135deg, #10B981, #059669); border: none; color: #FFFFFF !important; font-weight: 800; padding: 0.65rem 0.85rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+                                        ✅ Approve &amp; Cook &rarr;
                                     </button>
                                 </form>
                                 <form method="POST" action="<?= e(url('orders/kitchen_queue.php')); ?>">
@@ -227,7 +227,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <input type="hidden" name="action" value="transition">
                                     <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                     <input type="hidden" name="new_status" value="Cancelled">
-                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger-600); padding: 0.55rem 0.75rem;" data-confirm="Are you sure you want to cancel this order?" title="Cancel Order">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: #DC2626; border-color: rgba(220, 38, 38, 0.3); padding: 0.65rem 0.75rem; border-radius: 8px;" data-confirm="Are you sure you want to cancel this order?" title="Cancel Order">
                                         ✕
                                     </button>
                                 </form>
@@ -284,8 +284,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="Ready">
-                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--warning-600); border-color: var(--warning-600); font-weight: 700; padding: 0.55rem 0.75rem;">
-                                    Mark as Ready 🔔 &rarr;
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: linear-gradient(135deg, #F59E0B, #D97706); border: none; color: #FFFFFF !important; font-weight: 800; padding: 0.65rem 0.85rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);">
+                                    🔔 Mark as Ready &amp; Packed &rarr;
                                 </button>
                             </form>
                         </div>
@@ -334,8 +334,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="<?= e($nextStage); ?>">
-                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: var(--success-600); border-color: var(--success-600); font-weight: 700; padding: 0.55rem 0.75rem;">
-                                    Dispatch: <?= e($nextStage); ?> &rarr;
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: linear-gradient(135deg, #0D9488, #059669); border: none; color: #FFFFFF !important; font-weight: 800; padding: 0.65rem 0.85rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);">
+                                    <?= ($o['order_type'] === 'pickup') ? '🏪 Handover: Collected' : '🛵 Dispatch: Out for Delivery'; ?> &rarr;
                                 </button>
                             </form>
                         </div>
@@ -385,8 +385,8 @@ require_once __DIR__ . '/../includes/header.php';
                                 <input type="hidden" name="action" value="transition">
                                 <input type="hidden" name="order_id" value="<?= (int)$o['order_id']; ?>">
                                 <input type="hidden" name="new_status" value="Completed">
-                                <button type="submit" class="btn btn-secondary btn-sm btn-block" style="font-weight: 700; color: var(--success-700); padding: 0.55rem 0.75rem;">
-                                    Mark as Delivered / Completed ✓
+                                <button type="submit" class="btn btn-primary btn-sm btn-block" style="background: linear-gradient(135deg, #16A34A, #15803D); border: none; color: #FFFFFF !important; font-weight: 800; padding: 0.65rem 0.85rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);">
+                                    ✓ Complete &amp; Fulfill Order
                                 </button>
                             </form>
                         </div>

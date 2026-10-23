@@ -16,6 +16,7 @@ require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/errors.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/order_functions.php';
 
 // Route guard: Accessible only by Administrator and Kitchen Staff
 if (!is_logged_in() || !in_array($_SESSION['role'] ?? '', ['admin', 'kitchen_staff'], true)) {
@@ -33,6 +34,42 @@ if (!$pdo) {
         'success' => false,
         'error'   => 'Database service unavailable.'
     ]);
+    exit;
+}
+
+// Handle Direct Order Approval via AJAX POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $rawInput = file_get_contents('php://input');
+    $payload = json_decode($rawInput, true);
+    if (!is_array($payload)) {
+        $payload = $_POST;
+    }
+
+    $action = $payload['action'] ?? '';
+    $orderId = isset($payload['order_id']) ? (int)$payload['order_id'] : 0;
+
+    if ($action === 'approve' && $orderId > 0) {
+        $ok = change_order_status($pdo, $orderId, 'Preparing', (int)$_SESSION['user_id']);
+        if ($ok) {
+            echo json_encode([
+                'success'    => true,
+                'message'    => 'Order approved and sent to kitchen stove!',
+                'order_id'   => $orderId,
+                'new_status' => 'Preparing'
+            ]);
+            exit;
+        } else {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'error'   => 'Unable to approve order. It may have already transitioned or been cancelled.'
+            ]);
+            exit;
+        }
+    }
+
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid action requested.']);
     exit;
 }
 

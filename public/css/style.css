@@ -31,15 +31,21 @@
   --glass-border:   rgba(255, 255, 255, 0.85);
 
   /* Status Colors */
+  --success-700: #166534;
+  --success-600: #15803D;
   --success-500: #1F9D55;
   --success-100: rgba(227, 246, 234, 0.85);
 
+  --warning-700: #B45309;
+  --warning-600: #D97706;
   --warning-500: #C98206;
   --warning-100: rgba(255, 243, 214, 0.85);
 
+  --danger-600:  #B91C1C;
   --danger-500:  #D8443A;
   --danger-100:  rgba(253, 231, 229, 0.85);
 
+  --info-600:    #1D4ED8;
   --info-500:    #2F6FDE;
   --info-100:    rgba(228, 237, 253, 0.85);
 

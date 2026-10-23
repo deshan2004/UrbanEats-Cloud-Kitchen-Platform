@@ -246,12 +246,15 @@ declare(strict_types=1);
             <div style="font-size:0.88rem;font-weight:600;color:#374151;margin-bottom:0.25rem;">
                 ${order.customer_name} &bull; <span style="color:#111827;font-weight:800;">${order.total_formatted}</span>
             </div>
-            <div style="font-size:0.8rem;color:#6B7280;line-height:1.4;margin-bottom:0.85rem;max-height:38px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <div style="font-size:0.8rem;color:#6B7280;line-height:1.4;margin-bottom:0.85rem;max-height:42px;overflow:hidden;text-overflow:ellipsis;">
                 🍽️ ${order.items_summary}
             </div>
-            <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
-                <a href="${kitchenQueueUrl}" style="background:#F26B1D;color:#FFFFFF;text-decoration:none;font-size:0.82rem;font-weight:700;padding:0.4rem 0.85rem;border-radius:8px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
-                    View in Kitchen Queue &rarr;
+            <div style="display:flex;gap:0.5rem;justify-content:flex-end;align-items:center;">
+                <button type="button" class="ue-toast-approve-btn" data-order-id="${order.order_id}" style="background:linear-gradient(135deg, #10B981, #059669);color:#FFFFFF !important;border:none;font-size:0.82rem;font-weight:800;padding:0.45rem 0.95rem;border-radius:8px;box-shadow:0 3px 10px rgba(16,185,129,0.35);cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;">
+                    <span>✅</span> Approve Order
+                </button>
+                <a href="${kitchenQueueUrl}" style="background:#F26B1D;color:#FFFFFF !important;text-decoration:none;font-size:0.82rem;font-weight:700;padding:0.45rem 0.85rem;border-radius:8px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
+                    Queue &rarr;
                 </a>
             </div>
         `;
@@ -270,7 +273,46 @@ declare(strict_types=1);
 
         const closeBtn = toast.querySelector('.ue-toast-close');
         if (closeBtn) closeBtn.addEventListener('click', dismissToast);
-        setTimeout(dismissToast, 9000);
+
+        // Instant Order Approval Action with Smooth Auto-Close
+        const approveBtn = toast.querySelector('.ue-toast-approve-btn');
+        if (approveBtn) {
+            approveBtn.addEventListener('click', async function () {
+                approveBtn.disabled = true;
+                approveBtn.innerHTML = '<span>⏳</span> Approving...';
+                try {
+                    const res = await fetch(liveOrdersUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'approve', order_id: order.order_id })
+                    });
+                    const d = await res.json();
+                    if (d && d.success) {
+                        approveBtn.style.background = '#059669';
+                        approveBtn.innerHTML = '<span>✓</span> Approved &amp; Cooking!';
+                        toast.style.borderColor = '#10B981';
+                        // Smoothly close the toast card after 1 second as requested
+                        setTimeout(() => {
+                            dismissToast();
+                        }, 1000);
+                        // If on kitchen_queue or admin dashboard, reload board to reflect new stage
+                        if (window.location.pathname.includes('kitchen_queue.php') || window.location.pathname.includes('dashboard.php')) {
+                            setTimeout(() => { window.location.reload(); }, 1100);
+                        }
+                    } else {
+                        approveBtn.disabled = false;
+                        approveBtn.innerHTML = '<span>✕</span> Retry';
+                        alert(d.error || 'Failed to approve order.');
+                    }
+                } catch (err) {
+                    console.error('[UrbanEats Approval Error]', err);
+                    approveBtn.disabled = false;
+                    approveBtn.innerHTML = '<span>✕</span> Retry';
+                }
+            });
+        }
+
+        setTimeout(dismissToast, 12000);
 
         // Desktop Notification
         if ('Notification' in window && Notification.permission === 'granted') {
@@ -419,6 +461,156 @@ declare(strict_types=1);
 
     window.triggerUrbanOrderChime = playCulinaryChime;
     window.showUrbanOrderToast = showOrderToast;
+})();
+</script>
+<?php endif; ?>
+
+<?php if (!empty($_SESSION['role']) && $_SESSION['role'] === 'customer'): ?>
+<!-- Real-time Live Order Status Notification Engine for Customer Patrons (Pure embedded PHP script) -->
+<script>
+(function () {
+    'use strict';
+
+    const customerOrdersUrl = <?= json_encode(url('api/customer_orders.php')); ?>;
+    const knownStatusMap = new Map();
+    let isInitialLoad = true;
+    let audioContext = null;
+
+    function getAudioContext() {
+        if (!audioContext) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) audioContext = new AudioCtx();
+        }
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        return audioContext;
+    }
+
+    // Soft Harmonic Customer Chime (C5 -> E5)
+    function playCustomerChime() {
+        try {
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+
+            // Note 1: C5
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(523.25, now);
+            gain1.gain.setValueAtTime(0, now);
+            gain1.gain.linearRampToValueAtTime(0.22, now + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.56);
+
+            // Note 2: E5
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(659.25, now + 0.1);
+            gain2.gain.setValueAtTime(0, now + 0.1);
+            gain2.gain.linearRampToValueAtTime(0.24, now + 0.15);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.1);
+            osc2.stop(now + 0.76);
+        } catch (e) {
+            console.warn('[Customer Audio]', e);
+        }
+    }
+
+    function showCustomerToast(order) {
+        let container = document.getElementById('ue-customer-toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'ue-customer-toast-container';
+            container.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999999;display:flex;flex-direction:column;gap:10px;max-width:390px;width:calc(100vw - 48px);pointer-events:none;';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.style.cssText = 'pointer-events:auto;background:rgba(255,255,255,0.98);backdrop-filter:blur(16px);border:1px solid #10B981;border-left:6px solid #10B981;border-radius:14px;box-shadow:0 18px 40px -10px rgba(16,185,129,0.3);padding:1rem 1.15rem;color:#1F2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transform:translateY(50px);opacity:0;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);';
+
+        let title = 'Order Update';
+        let titleColor = '#059669';
+        if (order.status === 'Preparing') {
+            title = '🎉 Order Approved & Cooking!';
+        } else if (order.status === 'Ready') {
+            title = '🔔 Order Packaged & Ready!';
+        } else if (order.status === 'Out for Delivery') {
+            title = '🛵 Order On The Way!';
+        } else if (order.status === 'Completed') {
+            title = '🍽️ Order Delivered!';
+        }
+
+        toast.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.35rem;">
+                <div style="font-weight:800;font-size:0.95rem;color:${titleColor};display:flex;align-items:center;gap:0.4rem;">
+                    <span>${order.icon || '🔔'}</span> ${title}
+                </div>
+                <button type="button" class="ue-cust-toast-close" style="background:none;border:none;font-size:1.15rem;cursor:pointer;color:#9CA3AF;line-height:1;padding:0 3px;">&times;</button>
+            </div>
+            <div style="font-size:0.86rem;color:#374151;margin-bottom:0.35rem;line-height:1.4;">
+                ${order.status_message}
+            </div>
+            <div style="font-size:0.78rem;color:#6B7280;margin-bottom:0.65rem;">
+                Order <strong style="color:#F26B1D;font-family:monospace;">#${order.order_code}</strong> &bull; ${order.total_formatted}
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                <a href="${order.tracking_url}" style="background:linear-gradient(135deg, #F26B1D, #D9570F);color:#FFFFFF !important;text-decoration:none;font-size:0.8rem;font-weight:700;padding:0.4rem 0.85rem;border-radius:6px;box-shadow:0 2px 6px rgba(242,107,29,0.3);display:inline-flex;align-items:center;gap:0.3rem;">
+                    Track Live Progress &rarr;
+                </a>
+            </div>
+        `;
+
+        container.appendChild(toast);
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+
+        function dismiss() {
+            toast.style.transform = 'translateY(50px)';
+            toast.style.opacity = '0';
+            setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+        }
+
+        const closeBtn = toast.querySelector('.ue-cust-toast-close');
+        if (closeBtn) closeBtn.addEventListener('click', dismiss);
+        setTimeout(dismiss, 10000);
+    }
+
+    async function pollCustomerOrders() {
+        try {
+            const res = await fetch(customerOrdersUrl, { credentials: 'same-origin' });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || !data.success || !Array.isArray(data.orders)) return;
+
+            data.orders.forEach(order => {
+                const prev = knownStatusMap.get(order.order_id);
+                if (!isInitialLoad && prev && prev !== order.status) {
+                    playCustomerChime();
+                    showCustomerToast(order);
+                }
+                knownStatusMap.set(order.order_id, order.status);
+            });
+
+            isInitialLoad = false;
+        } catch (e) {
+            console.warn('[Customer Poll Note]', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        pollCustomerOrders();
+        setInterval(pollCustomerOrders, 5000);
+    });
 })();
 </script>
 <?php endif; ?>
