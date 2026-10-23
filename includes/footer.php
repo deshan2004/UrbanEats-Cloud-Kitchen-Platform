@@ -11,23 +11,23 @@ declare(strict_types=1);
     </div><!-- /.container -->
 </main><!-- /#main-content -->
 
-<footer class="site-footer" style="background: #14100D; color: #EDE8E1; border-top: 4px solid var(--primary-500); padding: 3.5rem 0 1.75rem; margin-top: auto; font-family: var(--font-family);">
+<footer class="site-footer" style="background: linear-gradient(180deg, #FFF5EC 0%, #FFFFFF 100%); color: var(--ink-700); border-top: 2px solid rgba(242, 107, 29, 0.25); padding: 3.5rem 0 1.75rem; margin-top: auto; font-family: var(--font-family); box-shadow: 0 -10px 35px rgba(242, 107, 29, 0.04);">
     <div class="container">
         
         <!-- Top Live Status & Emergency Order Assistance Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 0.9rem 1.4rem; margin-bottom: 2.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; border: 1px solid var(--border-default); border-radius: 14px; padding: 0.95rem 1.4rem; margin-bottom: 2.75rem; flex-wrap: wrap; gap: 1rem; box-shadow: 0 4px 16px rgba(31, 27, 22, 0.03);">
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(16, 185, 129, 0.18); color: #34D399; font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid rgba(16, 185, 129, 0.3);">
+                <span style="display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(16, 185, 129, 0.12); color: #047857; font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.75rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid rgba(16, 185, 129, 0.25);">
                     <span style="width: 7px; height: 7px; border-radius: 50%; background: #10B981; animation: ue-pulse-dot 1.5s infinite;"></span>
                     Live Cloud Kitchen Dispatch
                 </span>
-                <span style="color: #CFC8BF; font-size: 0.86rem;">Central Hub (Colombo 03) &bull; Prep &amp; Pack Time: ~18-22 mins</span>
+                <span style="color: var(--ink-600); font-size: 0.86rem;">Central Hub (Colombo 03) &bull; Prep &amp; Pack Time: ~18-22 mins</span>
             </div>
             <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; font-size: 0.88rem;">
-                <a href="tel:+94117509000" style="color: #FFFFFF; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;">
-                    <span style="color: var(--primary-500);">📞 Hotline:</span> +94 11 750 9000
+                <a href="tel:+94117509000" style="color: var(--ink-900); text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700;">
+                    <span style="color: var(--primary-600);">📞 Hotline:</span> +94 11 750 9000
                 </a>
-                <a href="https://wa.me/94771234567?text=Hi%20UrbanEats%20Kitchen,%20I%20have%20an%20inquiry%20regarding%20my%20order." target="_blank" style="color: #34D399; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700;">
+                <a href="https://wa.me/94771234567?text=Hi%20UrbanEats%20Kitchen,%20I%20have%20an%20inquiry%20regarding%20my%20order." target="_blank" style="color: #047857; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700;">
                     <span>💬 WhatsApp Support:</span> +94 77 123 4567
                 </a>
             </div>
@@ -38,21 +38,21 @@ declare(strict_types=1);
             
             <!-- Column 1: Brand & Culinary Excellence -->
             <div>
-                <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.85rem;">
                     <img src="<?= e(url('public/images/logo.png')); ?>" alt="UrbanEats" style="width: 34px; height: 34px; border-radius: 8px; object-fit: cover;">
-                    <span style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">UrbanEats</span>
+                    <span style="font-size: 1.35rem; font-weight: 800; color: var(--ink-900); letter-spacing: -0.02em;">UrbanEats</span>
                 </div>
-                <p style="color: #A8A096; font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                <p style="color: var(--ink-600); font-size: 0.88rem; line-height: 1.6; margin-bottom: 1.25rem;">
                     Sri Lanka's premier chef-driven cloud kitchen network. Operating state-of-the-art culinary hubs with hygienic contact-free packaging and rapid express dispatch.
                 </p>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                    <span style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #E5E7EB; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                    <span style="background: var(--primary-50); border: 1px solid var(--primary-100); color: var(--primary-600); font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">
                         ✓ ISO 22000 Food Safety
                     </span>
-                    <span style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #E5E7EB; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                    <span style="background: var(--primary-50); border: 1px solid var(--primary-100); color: var(--primary-600); font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">
                         ✓ 100% Halal Assured
                     </span>
-                    <span style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #E5E7EB; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 6px;">
+                    <span style="background: var(--primary-50); border: 1px solid var(--primary-100); color: var(--primary-600); font-size: 0.72rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 6px;">
                         ✓ Eco Thermal Boxes
                     </span>
                 </div>
@@ -60,56 +60,56 @@ declare(strict_types=1);
 
             <!-- Column 2: Hub Locations & Hours -->
             <div>
-                <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1.15rem 0;">
+                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--ink-900); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1.15rem 0;">
                     Kitchen Hub &amp; Timings
                 </h4>
-                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.86rem; color: #A8A096;">
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.86rem; color: var(--ink-600);">
                     <li style="display: flex; align-items: flex-start; gap: 0.55rem;">
-                        <span style="color: var(--primary-500); font-size: 1.05rem;">📍</span>
-                        <span><strong>Central Kitchen:</strong> No. 42, Galle Road, Kollupitiya, Colombo 03, Sri Lanka</span>
+                        <span style="color: var(--primary-600); font-size: 1.05rem;">📍</span>
+                        <span><strong style="color: var(--ink-900);">Central Kitchen:</strong> No. 42, Galle Road, Kollupitiya, Colombo 03, Sri Lanka</span>
                     </li>
                     <li style="display: flex; align-items: flex-start; gap: 0.55rem;">
-                        <span style="color: var(--primary-500); font-size: 1.05rem;">⏰</span>
-                        <span><strong>Operating Hours:</strong><br>Mon – Sun: 10:00 AM – 11:30 PM (Midnight Delivery)</span>
+                        <span style="color: var(--primary-600); font-size: 1.05rem;">⏰</span>
+                        <span><strong style="color: var(--ink-900);">Operating Hours:</strong><br>Mon – Sun: 10:00 AM – 11:30 PM (Midnight Delivery)</span>
                     </li>
                     <li style="display: flex; align-items: flex-start; gap: 0.55rem;">
-                        <span style="color: var(--primary-500); font-size: 1.05rem;">🛵</span>
-                        <span><strong>Dispatch Coverage:</strong> Colombo 01-15, Rajagiriya, Dehiwala, Mount Lavinia</span>
+                        <span style="color: var(--primary-600); font-size: 1.05rem;">🛵</span>
+                        <span><strong style="color: var(--ink-900);">Dispatch Coverage:</strong> Colombo 01-15, Rajagiriya, Dehiwala, Mount Lavinia</span>
                     </li>
                 </ul>
             </div>
 
             <!-- Column 3: Quick Navigation -->
             <div>
-                <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1.15rem 0;">
+                <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--ink-900); text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 1.15rem 0;">
                     Patron Services
                 </h4>
                 <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.86rem;">
-                    <li><a href="<?= e(url('index.php')); ?>" style="color: #A8A096; text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='#F26B1D'" onmouseout="this.style.color='#A8A096'">🍽️ Daily Chef Menu &amp; Specials</a></li>
-                    <li><a href="<?= e(url('orders/tracking.php')); ?>" style="color: #A8A096; text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='#F26B1D'" onmouseout="this.style.color='#A8A096'">📍 Live Order Dispatch Tracking</a></li>
-                    <li><a href="<?= e(url('orders/history.php')); ?>" style="color: #A8A096; text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='#F26B1D'" onmouseout="this.style.color='#A8A096'">📜 Order Receipts &amp; Invoices</a></li>
-                    <li><a href="<?= e(url('orders/cart.php')); ?>" style="color: #A8A096; text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='#F26B1D'" onmouseout="this.style.color='#A8A096'">🛒 Review Shopping Cart</a></li>
-                    <li><a href="<?= e(url('auth/profile.php')); ?>" style="color: #A8A096; text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='#F26B1D'" onmouseout="this.style.color='#A8A096'">👤 Customer Account &amp; Addresses</a></li>
+                    <li><a href="<?= e(url('index.php')); ?>" style="color: var(--ink-600); text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary-600)'" onmouseout="this.style.color='var(--ink-600)'">🍽️ Daily Chef Menu &amp; Specials</a></li>
+                    <li><a href="<?= e(url('orders/tracking.php')); ?>" style="color: var(--ink-600); text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary-600)'" onmouseout="this.style.color='var(--ink-600)'">📍 Live Order Dispatch Tracking</a></li>
+                    <li><a href="<?= e(url('orders/history.php')); ?>" style="color: var(--ink-600); text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary-600)'" onmouseout="this.style.color='var(--ink-600)'">📜 Order Receipts &amp; Invoices</a></li>
+                    <li><a href="<?= e(url('orders/cart.php')); ?>" style="color: var(--ink-600); text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary-600)'" onmouseout="this.style.color='var(--ink-600)'">🛒 Review Shopping Cart</a></li>
+                    <li><a href="<?= e(url('auth/profile.php')); ?>" style="color: var(--ink-600); text-decoration: none; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary-600)'" onmouseout="this.style.color='var(--ink-600)'">👤 Customer Account &amp; Addresses</a></li>
                 </ul>
             </div>
 
             <!-- Column 4: Immediate Help & Not Received Assistance -->
             <div>
-                <div style="background: rgba(242, 107, 29, 0.07); border: 1px solid rgba(242, 107, 29, 0.35); border-radius: 14px; padding: 1.25rem;">
+                <div style="background: #FFFFFF; border: 1.5px solid rgba(242, 107, 29, 0.35); border-radius: 16px; padding: 1.35rem; box-shadow: 0 10px 30px -5px rgba(242, 107, 29, 0.1);">
                     <div style="display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.45rem;">
-                        <span style="font-size: 1.2rem;">🚨</span>
-                        <h4 style="font-size: 0.95rem; font-weight: 800; color: #FFFFFF; margin: 0;">
+                        <span style="font-size: 1.25rem;">🚨</span>
+                        <h4 style="font-size: 0.98rem; font-weight: 800; color: var(--ink-900); margin: 0;">
                             Order Not Received?
                         </h4>
                     </div>
-                    <p style="color: #CFC8BF; font-size: 0.82rem; line-height: 1.5; margin-bottom: 1rem;">
+                    <p style="color: var(--ink-600); font-size: 0.82rem; line-height: 1.5; margin-bottom: 1.15rem;">
                         Did your meal not arrive, or is rider dispatch delayed? Contact our direct kitchen controller immediately:
                     </p>
-                    <div style="display: flex; flex-direction: column; gap: 0.55rem;">
-                        <a href="tel:+94117509000" style="background: linear-gradient(135deg, #DC2626, #B91C1C); color: #FFFFFF !important; text-decoration: none; font-size: 0.82rem; font-weight: 800; padding: 0.6rem 0.9rem; border-radius: 8px; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 12px rgba(220,38,38,0.35);">
+                    <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                        <a href="tel:+94117509000" style="background: linear-gradient(135deg, #DC2626, #B91C1C); color: #FFFFFF !important; text-decoration: none; font-size: 0.82rem; font-weight: 800; padding: 0.65rem 0.95rem; border-radius: 8px; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; box-shadow: 0 4px 14px rgba(220,38,38,0.28);">
                             📞 Call Kitchen Hotline Now
                         </a>
-                        <a href="https://wa.me/94771234567?text=Hello%20UrbanEats%20Kitchen,%20my%20order%20has%20not%20arrived%20yet.%20Please%20check%20dispatch%20status." target="_blank" style="background: linear-gradient(135deg, #25D366, #128C7E); color: #FFFFFF !important; text-decoration: none; font-size: 0.82rem; font-weight: 800; padding: 0.6rem 0.9rem; border-radius: 8px; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                        <a href="https://wa.me/94771234567?text=Hello%20UrbanEats%20Kitchen,%20my%20order%20has%20not%20arrived%20yet.%20Please%20check%20dispatch%20status." target="_blank" style="background: linear-gradient(135deg, #10B981, #059669); color: #FFFFFF !important; text-decoration: none; font-size: 0.82rem; font-weight: 800; padding: 0.65rem 0.95rem; border-radius: 8px; text-align: center; display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; box-shadow: 0 4px 14px rgba(16,185,129,0.25);">
                             💬 WhatsApp Kitchen Desk
                         </a>
                     </div>
@@ -119,17 +119,17 @@ declare(strict_types=1);
         </div>
 
         <!-- Bottom Bar: Payments & Copyright -->
-        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.82rem; color: #8F867C;">
+        <div style="border-top: 1px solid var(--border-default); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.82rem; color: var(--ink-500);">
             <div>
-                &copy; <?= date('Y'); ?> <strong>UrbanEats Cloud Kitchen Platform</strong> &bull; All rights reserved. IT3113 Advanced Web Technologies.
+                &copy; <?= date('Y'); ?> <strong style="color: var(--ink-900);">UrbanEats Cloud Kitchen Platform</strong> &bull; All rights reserved. 
             </div>
             <div style="display: flex; align-items: center; gap: 0.65rem; flex-wrap: wrap;">
-                <span style="color: #CFC8BF; font-weight: 600;">Secure Payments:</span>
-                <span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.55rem; border-radius: 4px; color: #E5E7EB;">Visa</span>
-                <span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.55rem; border-radius: 4px; color: #E5E7EB;">Mastercard</span>
-                <span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.55rem; border-radius: 4px; color: #E5E7EB;">AMEX</span>
-                <span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.55rem; border-radius: 4px; color: #E5E7EB;">LankaQR</span>
-                <span style="background: rgba(255,255,255,0.06); padding: 0.2rem 0.55rem; border-radius: 4px; color: #E5E7EB;">Cash on Delivery</span>
+                <span style="color: var(--ink-700); font-weight: 600;">Secure Payments:</span>
+                <span style="background: #FFFFFF; border: 1px solid var(--border-default); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--ink-700); font-weight: 600; font-size: 0.75rem;">Visa</span>
+                <span style="background: #FFFFFF; border: 1px solid var(--border-default); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--ink-700); font-weight: 600; font-size: 0.75rem;">Mastercard</span>
+                <span style="background: #FFFFFF; border: 1px solid var(--border-default); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--ink-700); font-weight: 600; font-size: 0.75rem;">AMEX</span>
+                <span style="background: #FFFFFF; border: 1px solid var(--border-default); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--ink-700); font-weight: 600; font-size: 0.75rem;">LankaQR</span>
+                <span style="background: #FFFFFF; border: 1px solid var(--border-default); padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--ink-700); font-weight: 600; font-size: 0.75rem;">Cash on Delivery</span>
             </div>
         </div>
 
