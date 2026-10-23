@@ -10,6 +10,7 @@ CREATE DATABASE IF NOT EXISTS `urbaneats_db` DEFAULT CHARACTER SET utf8mb4 COLLA
 USE `urbaneats_db`;
 
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `payments`;
 DROP TABLE IF EXISTS `order_status_history`;
 DROP TABLE IF EXISTS `order_items`;
 DROP TABLE IF EXISTS `orders`;
@@ -330,7 +331,7 @@ CREATE TABLE `order_items` (
     `quantity` INT UNSIGNED NOT NULL DEFAULT 1,
     `price_at_purchase` DECIMAL(10,2) NOT NULL,
     CONSTRAINT `fk_items_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_items_dish` FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`id`) ON DELETE RESTRICT
+    CONSTRAINT `fk_items_dish` FOREIGN KEY (`dish_id`) REFERENCES `dishes` (`dish_id`) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
