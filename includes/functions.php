@@ -111,6 +111,17 @@ function get_client_ip(): string {
  */
 function log_action(PDO $pdo, ?int $user_id, string $action, ?string $details = null): bool {
     try {
+        if ($user_id !== null) {
+            if ($user_id <= 0) {
+                $user_id = null;
+            } else {
+                $uCheck = $pdo->prepare("SELECT id FROM users WHERE id = ?");
+                $uCheck->execute([$user_id]);
+                if (!$uCheck->fetch()) {
+                    $user_id = null;
+                }
+            }
+        }
         $sql = "INSERT INTO audit_log (user_id, action, details, ip_address, user_agent, created_at) 
                 VALUES (:user_id, :action, :details, :ip_address, :user_agent, NOW())";
         $stmt = $pdo->prepare($sql);
@@ -147,7 +158,7 @@ function format_price(float|int|string $amount): string {
  * Component B contract function: Transaction-safe stock deduction.
  * Called by Component C during checkout. Refuses to go below zero.
  *
- * Uses an atomic conditional UPDATE (`WHERE dish_id = :id AND quantity >= :qty`).
+ * Uses an atomic conditional UPDATE (`WHERE dish_id = :id AND quantity >= :check_qty`).
  * If two concurrent checkouts attempt to claim the last remaining item, MySQL's
  * row-level write lock ensures the first transaction updates the row, reducing quantity
  * to 0. The second transaction's WHERE condition (`quantity >= 1`) then evaluates to false,
@@ -185,15 +196,16 @@ function reduce_stock(PDO $pdo, int $dish_id, int $qty, string $order_reference 
         $prevQty = (int)$current;
         $newQty  = $prevQty - $qty;
 
-        // 2. Perform atomic conditional update
+        // 2. Perform atomic conditional update with distinct parameter markers for native prepared statements
         $updateStmt = $pdo->prepare(
             "UPDATE inventory 
-             SET quantity = quantity - :qty, updated_at = NOW() 
-             WHERE dish_id = :dish_id AND quantity >= :qty"
+             SET quantity = quantity - :deduct_qty, updated_at = NOW() 
+             WHERE dish_id = :dish_id AND quantity >= :check_qty"
         );
         $updateStmt->execute([
-            ':qty'     => $qty,
-            ':dish_id' => $dish_id,
+            ':deduct_qty' => $qty,
+            ':dish_id'    => $dish_id,
+            ':check_qty'  => $qty,
         ]);
 
         if ($updateStmt->rowCount() === 0) {
@@ -203,14 +215,24 @@ function reduce_stock(PDO $pdo, int $dish_id, int $qty, string $order_reference 
             return false;
         }
 
-        // 3. Record immutable stock movement
+        // 3. Resolve user_id for stock_movements (safeguarding against missing foreign key)
+        $movUserId = (!empty($_SESSION['user_id']) && (int)$_SESSION['user_id'] > 0) ? (int)$_SESSION['user_id'] : null;
+        if ($movUserId !== null) {
+            $uCheck = $pdo->prepare("SELECT id FROM users WHERE id = ?");
+            $uCheck->execute([$movUserId]);
+            if (!$uCheck->fetch()) {
+                $movUserId = null;
+            }
+        }
+
+        // 4. Record immutable stock movement
         $movStmt = $pdo->prepare(
             "INSERT INTO stock_movements (dish_id, user_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, created_at)
              VALUES (:dish_id, :user_id, 'order_deduction', :qty_change, :prev_qty, :new_qty, :reason, NOW())"
         );
         $movStmt->execute([
             ':dish_id'    => $dish_id,
-            ':user_id'    => $_SESSION['user_id'] ?? null,
+            ':user_id'    => $movUserId,
             ':qty_change' => -$qty,
             ':prev_qty'   => $prevQty,
             ':new_qty'    => $newQty,
