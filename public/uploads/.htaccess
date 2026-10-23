@@ -1,0 +1,5 @@
+# Security hardening: Prevent execution of scripts in uploads directory
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|cgi|sh|bash|exe)$">
+    Require all denied
+</FilesMatch>
+Options -ExecCGI -Indexes

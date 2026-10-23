@@ -81,14 +81,14 @@ require_once __DIR__ . '/includes/header.php';
                         Stock Dashboard
                     </a>
                 <?php else: ?>
-                    <a href="<?= e(url('orders/cart.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
-                        Order Food (Cart) &rarr;
+                    <a href="<?= e(url('menu/index.php')); ?>" class="btn" style="background: #FFFFFF; color: var(--primary-500); font-weight: 700; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        Browse Menu &rarr;
+                    </a>
+                    <a href="<?= e(url('orders/cart.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
+                        My Cart
                     </a>
                     <a href="<?= e(url('orders/tracking.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
                         Track Order
-                    </a>
-                    <a href="<?= e(url('orders/history.php')); ?>" class="btn" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); color: #FFFFFF; font-weight: 600; font-size: 1.05rem; padding: 0.85rem 2rem;">
-                        My Orders
                     </a>
                 <?php endif; ?>
             <?php endif; ?>
