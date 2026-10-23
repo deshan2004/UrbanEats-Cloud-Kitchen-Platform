@@ -150,8 +150,29 @@ INSERT INTO `users` (`id`, `role_id`, `full_name`, `username`, `email`, `phone`,
 (20, 3, 'Bhanuka Rajapaksha', 'bhanuka_r', 'bhanuka.r@gmail.com', '0774433221', '62 Wackwella Road, Galle', '$2y$12$/CBY6Vg.rrsarUEL8nlYoOYBee8AajiU3oYUADd0bEFvV6zos7zv6', 1),
 (21, 3, 'Hansika Jayakody', 'hansika_j', 'hansika.j@gmail.com', '0715566114', '73 Templers Road, Mount Lavinia', '$2y$12$/CBY6Vg.rrsarUEL8nlYoOYBee8AajiU3oYUADd0bEFvV6zos7zv6', 1);
 
-INSERT INTO `audit_log` (`user_id`, `action`, `details`, `ip_address`, `user_agent`) VALUES
-(1, 'SYSTEM_INIT', 'Initial database schema and default roles/accounts seeded successfully', '127.0.0.1', 'CLI-Migration');
+INSERT INTO `audit_log` (`user_id`, `action`, `details`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1, 'SYSTEM_INIT', 'Initial database schema and default roles/accounts seeded successfully', '127.0.0.1', 'CLI-Migration', '2026-10-15 08:00:00'),
+(1, 'USER_LOGIN', 'Administrator authenticated successfully', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-15 08:30:00'),
+(1, 'ROLE_ASSIGNED', 'Assigned role Kitchen Staff to user #3 (Kasun Bandara)', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-15 09:00:00'),
+(3, 'USER_LOGIN', 'Kitchen staff logged into fulfillment station', '192.168.1.15', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-16 07:30:00'),
+(1, 'DISH_CREATED', 'Added new dish: Kottu Specialties - Chicken Kottu (LKR 1,450.00)', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-16 10:15:00'),
+(3, 'STOCK_RESTOCKED', 'Restocked 40 portions of Chicken Kottu after morning preparation', '192.168.1.15', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-16 11:00:00'),
+(6, 'USER_REGISTER', 'New customer account created: Anuki Fernando (anuki99)', '112.134.88.42', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)', '2026-10-17 12:05:00'),
+(6, 'USER_LOGIN', 'Customer logged in from mobile device', '112.134.88.42', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)', '2026-10-17 12:06:00'),
+(6, 'ORDER_PLACED', 'Order #ORD-2026-1001 placed successfully (Total: LKR 2,860.00)', '112.134.88.42', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4)', '2026-10-17 12:15:00'),
+(3, 'ORDER_STATUS_CHANGED', 'Order #ORD-2026-1001 transitioned Placed -> Preparing', '192.168.1.15', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-17 12:20:00'),
+(7, 'USER_REGISTER', 'New customer account created: Kavindu Jayasuriya (kavindu_j)', '112.135.12.98', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-17 13:40:00'),
+(7, 'ORDER_PLACED', 'Order #ORD-2026-1002 placed successfully (Total: LKR 2,450.00)', '112.135.12.98', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-17 13:45:00'),
+(4, 'STOCK_WASTAGE', 'Logged wastage of 2 portions: Cheese sauce container contaminated', '192.168.1.16', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-18 10:45:00'),
+(1, 'USER_STATUS_UPDATED', 'Deactivated dormant test account #21', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-18 14:00:00'),
+(8, 'USER_REGISTER', 'New customer account created: Tharushi Wijesinghe (tharushi_w)', '112.134.90.15', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5)', '2026-10-19 11:20:00'),
+(8, 'ORDER_PLACED', 'Order #ORD-2026-1003 placed successfully (Total: LKR 1,450.00)', '112.134.90.15', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5)', '2026-10-19 11:30:00'),
+(9, 'ORDER_PLACED', 'Order #ORD-2026-1004 placed successfully (Total: LKR 3,040.00)', '124.43.78.20', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-19 12:10:00'),
+(1, 'PASSWORD_RESET_REQUESTED', 'Requested secure password reset link for user #10 (pooja_m)', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-20 09:15:00'),
+(10, 'PASSWORD_RESET_COMPLETED', 'User #10 successfully reset account password using secure token', '124.43.82.11', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-20 09:22:00'),
+(1, 'CATEGORY_UPDATED', 'Updated category display order and metadata for Kottu Specialties', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-21 16:45:00'),
+(3, 'STOCK_ADJUSTMENT', 'Weekly physical stock audit reconciliation performed', '192.168.1.15', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', '2026-10-22 17:00:00'),
+(1, 'SALES_REPORT_VIEWED', 'Executive monthly sales analytics exported', '192.168.1.10', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', '2026-10-23 09:30:00');
 
 -- =====================================================================
 -- COMPONENT B: MENU, CATALOGUE & INVENTORY CONTROL
@@ -324,6 +345,24 @@ CREATE TABLE `order_status_history` (
     CONSTRAINT `fk_history_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ---------------------------------------------------------------------
+-- Table: payments (Required Component C table)
+-- ---------------------------------------------------------------------
+CREATE TABLE `payments` (
+    `payment_id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `order_id` INT UNSIGNED NOT NULL,
+    `amount` DECIMAL(10,2) NOT NULL,
+    `payment_method` ENUM('cod', 'card', 'bank') NOT NULL DEFAULT 'cod',
+    `payment_status` ENUM('Pending', 'Completed', 'Failed', 'Refunded') NOT NULL DEFAULT 'Completed',
+    `transaction_reference` VARCHAR(100) DEFAULT NULL,
+    `paid_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY `idx_payments_order_id` (`order_id`),
+    KEY `idx_payments_status` (`payment_status`),
+    CONSTRAINT `fk_payments_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- =====================================================================
 -- SEED DATA: COMPONENT B & C
 -- =====================================================================
@@ -435,31 +474,140 @@ INSERT INTO `stock_movements` (`dish_id`, `user_id`, `movement_type`, `quantity_
 -- 5. Component C Coupons Seed Data
 INSERT INTO `coupons` (`coupon_id`, `code`, `discount_type`, `discount_value`, `min_order_value`, `max_discount`, `expiry_date`, `is_active`) VALUES
 (1, 'UE10', 'percentage', 10.00, 1000.00, 500.00, '2027-12-31', 1),
-(2, 'WELCOME500', 'fixed', 500.00, 2000.00, 500.00, '2027-12-31', 1);
+(2, 'WELCOME500', 'fixed', 500.00, 2000.00, 500.00, '2027-12-31', 1),
+(3, 'KOTTU15', 'percentage', 15.00, 1200.00, 600.00, '2027-12-31', 1),
+(4, 'LUNCH200', 'fixed', 200.00, 1000.00, 200.00, '2027-12-31', 1),
+(5, 'FEAST20', 'percentage', 20.00, 3000.00, 1000.00, '2027-12-31', 1),
+(6, 'FREEDEL', 'fixed', 250.00, 1500.00, 250.00, '2027-12-31', 1);
 
--- 6. Component C Orders & Items Seed Data
+-- 6. Component C Orders Seed Data (20 Realistic Orders)
 INSERT INTO `orders` (`order_id`, `order_code`, `user_id`, `order_type`, `delivery_address`, `phone`, `payment_method`, `subtotal`, `delivery_fee`, `discount_amount`, `total_amount`, `status`, `created_at`) VALUES
-(1, 'ORD-2026-1001', 6, 'delivery', '24 Havelock Road, Colombo 05', '0775566778', 'cod', 2900.00, 250.00, 290.00, 2860.00, 'Placed', NOW() - INTERVAL 25 MINUTE),
-(2, 'ORD-2026-1002', 7, 'delivery', '78 Rajagiriya Road, Rajagiriya', '0714455667', 'card', 2200.00, 250.00, 0.00, 2450.00, 'Preparing', NOW() - INTERVAL 45 MINUTE),
-(3, 'ORD-2026-1003', 8, 'pickup', 'Pickup counter', '0702233445', 'cod', 1450.00, 0.00, 0.00, 1450.00, 'Ready', NOW() - INTERVAL 1 HOUR),
-(4, 'ORD-2026-1004', 9, 'delivery', '90 Nawala Road, Nugegoda', '0758899001', 'bank', 3100.00, 250.00, 310.00, 3040.00, 'Completed', NOW() - INTERVAL 2 HOUR);
+(1, 'ORD-2026-1001', 6, 'delivery', '24 Havelock Road, Colombo 05', '0775566778', 'cod', 2900.00, 250.00, 290.00, 2860.00, 'Placed', '2026-10-23 18:40:00'),
+(2, 'ORD-2026-1002', 7, 'delivery', '78 Rajagiriya Road, Rajagiriya', '0714455667', 'card', 2200.00, 250.00, 0.00, 2450.00, 'Preparing', '2026-10-23 18:15:00'),
+(3, 'ORD-2026-1003', 8, 'pickup', 'Pickup counter', '0702233445', 'cod', 1450.00, 0.00, 0.00, 1450.00, 'Ready', '2026-10-23 17:50:00'),
+(4, 'ORD-2026-1004', 9, 'delivery', '90 Nawala Road, Nugegoda', '0758899001', 'bank', 3100.00, 250.00, 310.00, 3040.00, 'Completed', '2026-10-23 16:30:00'),
+(5, 'ORD-2026-1005', 10, 'delivery', '31 Stanley Thilakarathne Mw, Nugegoda', '0773344112', 'card', 2650.00, 250.00, 265.00, 2635.00, 'Out for Delivery', '2026-10-23 17:15:00'),
+(6, 'ORD-2026-1006', 11, 'pickup', 'Pickup counter', '0729988776', 'card', 1850.00, 0.00, 0.00, 1850.00, 'Collected', '2026-10-23 15:45:00'),
+(7, 'ORD-2026-1007', 12, 'delivery', '102 Ward Place, Colombo 07', '0765544332', 'cod', 4200.00, 250.00, 500.00, 3950.00, 'Completed', '2026-10-22 20:10:00'),
+(8, 'ORD-2026-1008', 13, 'delivery', '21 Galle Face Terrace, Colombo 03', '0716677889', 'card', 1650.00, 250.00, 0.00, 1900.00, 'Completed', '2026-10-22 19:30:00'),
+(9, 'ORD-2026-1009', 14, 'delivery', '67 Kottawa Road, Pannipitiya', '0778877665', 'bank', 3300.00, 250.00, 330.00, 3220.00, 'Completed', '2026-10-22 13:20:00'),
+(10, 'ORD-2026-1010', 15, 'pickup', 'Pickup counter', '0781122998', 'cod', 950.00, 0.00, 0.00, 950.00, 'Completed', '2026-10-22 12:45:00'),
+(11, 'ORD-2026-1011', 16, 'delivery', '88 Peradeniya Road, Kandy', '0703344990', 'card', 2700.00, 250.00, 200.00, 2750.00, 'Cancelled', '2026-10-21 21:00:00'),
+(12, 'ORD-2026-1012', 17, 'delivery', '54 Baseline Road, Dematagoda', '0751239874', 'cod', 3800.00, 250.00, 380.00, 3670.00, 'Completed', '2026-10-21 19:40:00'),
+(13, 'ORD-2026-1013', 18, 'delivery', '19 Old Kesbewa Road, Delkanda', '0724455112', 'bank', 2150.00, 250.00, 0.00, 2400.00, 'Completed', '2026-10-21 13:10:00'),
+(14, 'ORD-2026-1014', 19, 'pickup', 'Pickup counter', '0768877443', 'cod', 1600.00, 0.00, 0.00, 1600.00, 'Completed', '2026-10-20 20:30:00'),
+(15, 'ORD-2026-1015', 20, 'delivery', '62 Wackwella Road, Galle', '0774433221', 'card', 4500.00, 250.00, 500.00, 4250.00, 'Completed', '2026-10-20 18:20:00'),
+(16, 'ORD-2026-1016', 6, 'delivery', '24 Havelock Road, Colombo 05', '0775566778', 'card', 2900.00, 250.00, 250.00, 2900.00, 'Completed', '2026-10-19 19:15:00'),
+(17, 'ORD-2026-1017', 7, 'delivery', '78 Rajagiriya Road, Rajagiriya', '0714455667', 'cod', 1450.00, 250.00, 0.00, 1700.00, 'Completed', '2026-10-19 13:00:00'),
+(18, 'ORD-2026-1018', 8, 'pickup', 'Pickup counter', '0702233445', 'card', 2250.00, 0.00, 200.00, 2050.00, 'Completed', '2026-10-18 20:00:00'),
+(19, 'ORD-2026-1019', 9, 'delivery', '90 Nawala Road, Nugegoda', '0758899001', 'bank', 3700.00, 250.00, 370.00, 3580.00, 'Completed', '2026-10-18 12:40:00'),
+(20, 'ORD-2026-1020', 10, 'delivery', '31 Stanley Thilakarathne Mw, Nugegoda', '0773344112', 'cod', 2100.00, 250.00, 0.00, 2350.00, 'Completed', '2026-10-17 19:10:00');
 
-INSERT INTO `order_items` (`order_id`, `dish_id`, `quantity`, `price_at_purchase`) VALUES
-(1, 1, 2, 1450.00),
-(2, 2, 1, 1650.00),
-(2, 21, 1, 750.00),
-(3, 1, 1, 1450.00),
-(4, 8, 2, 1850.00);
+-- 7. Component C Order Items Seed Data (33 Items)
+INSERT INTO `order_items` (`item_id`, `order_id`, `dish_id`, `quantity`, `price_at_purchase`) VALUES
+(1, 1, 1, 2, 1450.00),
+(2, 2, 2, 1, 1650.00),
+(3, 2, 21, 1, 550.00),
+(4, 3, 1, 1, 1450.00),
+(5, 4, 8, 2, 1550.00),
+(6, 5, 6, 1, 1850.00),
+(7, 5, 17, 2, 400.00),
+(8, 6, 2, 1, 1850.00),
+(9, 7, 6, 2, 1850.00),
+(10, 7, 21, 1, 500.00),
+(11, 8, 1, 1, 1450.00),
+(12, 8, 22, 1, 200.00),
+(13, 9, 8, 2, 1650.00),
+(14, 10, 15, 2, 350.00),
+(15, 10, 22, 1, 250.00),
+(16, 11, 6, 1, 1850.00),
+(17, 11, 13, 1, 850.00),
+(18, 12, 8, 2, 1550.00),
+(19, 12, 17, 2, 350.00),
+(20, 13, 1, 1, 1450.00),
+(21, 13, 18, 2, 350.00),
+(22, 14, 14, 4, 250.00),
+(23, 14, 21, 1, 600.00),
+(24, 15, 6, 2, 1850.00),
+(25, 15, 13, 1, 800.00),
+(26, 16, 1, 2, 1450.00),
+(27, 17, 1, 1, 1450.00),
+(28, 18, 2, 1, 1650.00),
+(29, 18, 21, 1, 600.00),
+(30, 19, 8, 2, 1850.00),
+(31, 20, 1, 1, 1450.00),
+(32, 20, 17, 1, 400.00),
+(33, 20, 22, 1, 250.00);
 
-INSERT INTO `order_status_history` (`order_id`, `status`, `changed_by`, `changed_at`) VALUES
-(1, 'Placed', 6, NOW() - INTERVAL 25 MINUTE),
-(2, 'Placed', 7, NOW() - INTERVAL 45 MINUTE),
-(2, 'Preparing', 3, NOW() - INTERVAL 30 MINUTE),
-(3, 'Placed', 8, NOW() - INTERVAL 60 MINUTE),
-(3, 'Preparing', 3, NOW() - INTERVAL 40 MINUTE),
-(3, 'Ready', 3, NOW() - INTERVAL 15 MINUTE),
-(4, 'Placed', 9, NOW() - INTERVAL 120 MINUTE),
-(4, 'Preparing', 4, NOW() - INTERVAL 90 MINUTE),
-(4, 'Ready', 4, NOW() - INTERVAL 60 MINUTE),
-(4, 'Out for Delivery', 4, NOW() - INTERVAL 40 MINUTE),
-(4, 'Completed', 1, NOW() - INTERVAL 10 MINUTE);
+-- 8. Component C Payments Seed Data (20 Payment Transactions)
+INSERT INTO `payments` (`payment_id`, `order_id`, `amount`, `payment_method`, `payment_status`, `transaction_reference`, `paid_at`, `created_at`) VALUES
+(1, 1, 2860.00, 'cod', 'Pending', 'TXN-20261001-0089', '2026-10-23 18:40:00', '2026-10-23 18:40:00'),
+(2, 2, 2450.00, 'card', 'Completed', 'TXN-20261002-0112', '2026-10-23 18:15:00', '2026-10-23 18:15:00'),
+(3, 3, 1450.00, 'cod', 'Pending', 'TXN-20261003-019B', '2026-10-23 17:50:00', '2026-10-23 17:50:00'),
+(4, 4, 3040.00, 'bank', 'Completed', 'TXN-20261004-0224', '2026-10-23 16:30:00', '2026-10-23 16:30:00'),
+(5, 5, 2635.00, 'card', 'Completed', 'TXN-20261005-02AD', '2026-10-23 17:15:00', '2026-10-23 17:15:00'),
+(6, 6, 1850.00, 'card', 'Completed', 'TXN-20261006-0336', '2026-10-23 15:45:00', '2026-10-23 15:45:00'),
+(7, 7, 3950.00, 'cod', 'Completed', 'TXN-20261007-03BF', '2026-10-22 20:10:00', '2026-10-22 20:10:00'),
+(8, 8, 1900.00, 'card', 'Completed', 'TXN-20261008-0448', '2026-10-22 19:30:00', '2026-10-22 19:30:00'),
+(9, 9, 3220.00, 'bank', 'Completed', 'TXN-20261009-04D1', '2026-10-22 13:20:00', '2026-10-22 13:20:00'),
+(10, 10, 950.00, 'cod', 'Completed', 'TXN-20261010-055A', '2026-10-22 12:45:00', '2026-10-22 12:45:00'),
+(11, 11, 2750.00, 'card', 'Failed', 'TXN-20261011-05E3', '2026-10-21 21:00:00', '2026-10-21 21:00:00'),
+(12, 12, 3670.00, 'cod', 'Completed', 'TXN-20261012-066C', '2026-10-21 19:40:00', '2026-10-21 19:40:00'),
+(13, 13, 2400.00, 'bank', 'Completed', 'TXN-20261013-06F5', '2026-10-21 13:10:00', '2026-10-21 13:10:00'),
+(14, 14, 1600.00, 'cod', 'Completed', 'TXN-20261014-077E', '2026-10-20 20:30:00', '2026-10-20 20:30:00'),
+(15, 15, 4250.00, 'card', 'Completed', 'TXN-20261015-0807', '2026-10-20 18:20:00', '2026-10-20 18:20:00'),
+(16, 16, 2900.00, 'card', 'Completed', 'TXN-20261016-0890', '2026-10-19 19:15:00', '2026-10-19 19:15:00'),
+(17, 17, 1700.00, 'cod', 'Completed', 'TXN-20261017-0919', '2026-10-19 13:00:00', '2026-10-19 13:00:00'),
+(18, 18, 2050.00, 'card', 'Completed', 'TXN-20261018-09A2', '2026-10-18 20:00:00', '2026-10-18 20:00:00'),
+(19, 19, 3580.00, 'bank', 'Completed', 'TXN-20261019-0A2B', '2026-10-18 12:40:00', '2026-10-18 12:40:00'),
+(20, 20, 2350.00, 'cod', 'Completed', 'TXN-20261020-0AB4', '2026-10-17 19:10:00', '2026-10-17 19:10:00');
+
+-- 9. Component C Order Status Progression History (47 Lifecycle Transitions)
+INSERT INTO `order_status_history` (`history_id`, `order_id`, `status`, `changed_by`, `changed_at`) VALUES
+(1, 1, 'Placed', 6, '2026-10-23 18:40:00'),
+(2, 2, 'Placed', 7, '2026-10-23 18:15:00'),
+(3, 2, 'Preparing', 3, '2026-10-23 18:25:00'),
+(4, 3, 'Placed', 8, '2026-10-23 17:50:00'),
+(5, 3, 'Preparing', 3, '2026-10-23 18:00:00'),
+(6, 3, 'Ready', 3, '2026-10-23 18:20:00'),
+(7, 4, 'Placed', 9, '2026-10-23 16:30:00'),
+(8, 4, 'Preparing', 4, '2026-10-23 16:40:00'),
+(9, 4, 'Ready', 4, '2026-10-23 17:05:00'),
+(10, 4, 'Out for Delivery', 4, '2026-10-23 17:15:00'),
+(11, 4, 'Completed', 1, '2026-10-23 17:45:00'),
+(12, 5, 'Placed', 10, '2026-10-23 17:15:00'),
+(13, 5, 'Preparing', 3, '2026-10-23 17:25:00'),
+(14, 5, 'Ready', 3, '2026-10-23 17:45:00'),
+(15, 5, 'Out for Delivery', 4, '2026-10-23 18:00:00'),
+(16, 6, 'Placed', 11, '2026-10-23 15:45:00'),
+(17, 6, 'Preparing', 3, '2026-10-23 15:55:00'),
+(18, 6, 'Ready', 3, '2026-10-23 16:20:00'),
+(19, 6, 'Collected', 1, '2026-10-23 16:35:00'),
+(20, 7, 'Placed', 12, '2026-10-22 20:10:00'),
+(21, 7, 'Completed', 1, '2026-10-22 21:05:00'),
+(22, 8, 'Placed', 13, '2026-10-22 19:30:00'),
+(23, 8, 'Completed', 1, '2026-10-22 20:20:00'),
+(24, 9, 'Placed', 14, '2026-10-22 13:20:00'),
+(25, 9, 'Completed', 1, '2026-10-22 14:15:00'),
+(26, 10, 'Placed', 15, '2026-10-22 12:45:00'),
+(27, 10, 'Completed', 1, '2026-10-22 13:15:00'),
+(28, 11, 'Placed', 16, '2026-10-21 21:00:00'),
+(29, 11, 'Cancelled', 16, '2026-10-21 21:10:00'),
+(30, 12, 'Placed', 17, '2026-10-21 19:40:00'),
+(31, 12, 'Completed', 1, '2026-10-21 20:30:00'),
+(32, 13, 'Placed', 18, '2026-10-21 13:10:00'),
+(33, 13, 'Completed', 1, '2026-10-21 14:00:00'),
+(34, 14, 'Placed', 19, '2026-10-20 20:30:00'),
+(35, 14, 'Completed', 1, '2026-10-20 21:15:00'),
+(36, 15, 'Placed', 20, '2026-10-20 18:20:00'),
+(37, 15, 'Completed', 1, '2026-10-20 19:15:00'),
+(38, 16, 'Placed', 6, '2026-10-19 19:15:00'),
+(39, 16, 'Completed', 1, '2026-10-19 20:10:00'),
+(40, 17, 'Placed', 7, '2026-10-19 13:00:00'),
+(41, 17, 'Completed', 1, '2026-10-19 13:50:00'),
+(42, 18, 'Placed', 8, '2026-10-18 20:00:00'),
+(43, 18, 'Completed', 1, '2026-10-18 20:45:00'),
+(44, 19, 'Placed', 9, '2026-10-18 12:40:00'),
+(45, 19, 'Completed', 1, '2026-10-18 13:30:00'),
+(46, 20, 'Placed', 10, '2026-10-17 19:10:00'),
+(47, 20, 'Completed', 1, '2026-10-17 20:00:00');

@@ -122,13 +122,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderId = (int)$pdo->lastInsertId();
 
-            // 3. Insert into `order_items` and deduct live inventory
+            // 3. Insert into `order_items` and deduct live inventory using Component B inventory engine
             $stmtItem = $pdo->prepare(
                 "INSERT INTO order_items (order_id, dish_id, quantity, price_at_purchase)
                  VALUES (?, ?, ?, ?)"
             );
-            $stmtDeductStock = $pdo->prepare(
-                "UPDATE dishes SET stock_quantity = stock_quantity - ? WHERE dish_id = ?"
+            $stmtDeductDishStock = $pdo->prepare(
+                "UPDATE dishes SET stock_quantity = GREATEST(0, stock_quantity - ?) WHERE dish_id = ?"
             );
 
             foreach ($orderItems as $oi) {
@@ -138,26 +138,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $oi['quantity'],
                     $oi['price'],
                 ]);
-                $stmtDeductStock->execute([
+
+                // Call Component B transaction-safe stock reduction (updates inventory & logs stock_movement)
+                if (function_exists('reduce_stock')) {
+                    $reduced = reduce_stock($pdo, (int)$oi['dish_id'], (int)$oi['quantity'], "Order #{$orderCode}");
+                    if (!$reduced) {
+                        throw new RuntimeException("Insufficient stock available for '{$oi['name']}'. Order cannot be fulfilled.");
+                    }
+                }
+
+                // Mirror stock_quantity on dishes table
+                $stmtDeductDishStock->execute([
                     $oi['quantity'],
                     $oi['dish_id'],
                 ]);
             }
 
-            // 4. Initial status in `order_status_history`
+            // 4. Record payment in `payments` table
+            $paymentStatus = ($paymentMethod === 'cod') ? 'Pending' : 'Completed';
+            $txRef = 'TXN-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+            $stmtPayment = $pdo->prepare(
+                "INSERT INTO payments (order_id, amount, payment_method, payment_status, transaction_reference, paid_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, NOW(), NOW())"
+            );
+            $stmtPayment->execute([
+                $orderId,
+                $totalAmount,
+                $paymentMethod,
+                $paymentStatus,
+                $txRef,
+            ]);
+
+            // 5. Initial status in `order_status_history`
             $stmtHistory = $pdo->prepare(
                 "INSERT INTO order_status_history (order_id, status, changed_by, changed_at)
                  VALUES (?, 'Placed', ?, NOW())"
             );
             $stmtHistory->execute([$orderId, (int)$currentUser['id']]);
 
-            // 5. System audit log
+            // 6. System audit log
             if (function_exists('log_action')) {
                 log_action(
                     $pdo,
                     (int)$currentUser['id'],
                     'ORDER_PLACED',
-                    "Order #{$orderCode} placed successfully (Total: LKR " . number_format($totalAmount, 2) . ")"
+                    "Order #{$orderCode} placed successfully (Total: LKR " . number_format($totalAmount, 2) . ", Payment: " . strtoupper($paymentMethod) . ")"
                 );
             }
 

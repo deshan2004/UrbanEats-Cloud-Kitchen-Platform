@@ -837,6 +837,17 @@ label .required {
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-default);
   padding: 2rem 0;
+  font-size: 0.88rem;
+  color: var(--ink-500);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
 /* ==========================================================================
    Component B: Menu, Catalogue & Inventory Control UI System
    ========================================================================== */
