@@ -99,8 +99,6 @@ urbaneats/
 ├── database/
 │   ├── urbaneats_db.sql        # Database schema, foreign keys & 20+ seed rows
 │   └── generate_images.php     # Starter dish placeholder generator
-├── tests/
-│   └── component_b_tests.php   # Automated verification test suite (17 test cases)
 ├── logs/
 │   └── error.log               # Server-side application error log
 └── README.md
@@ -116,7 +114,7 @@ urbaneats/
 
 2. **Database Import:**
    * Open phpMyAdmin (`http://localhost/phpmyadmin`) or MySQL CLI.
-   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all 9 relational tables with indexes and constraints, and seeds 20+ realistic rows in each table.
+   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all relational tables with indexes and constraints, and seeds 20+ realistic rows in each main table.
 
 3. **Database Configuration:**
    * Ensure `config/db.php` exists. If configuring a custom local MySQL password, edit `config/db.php`:
@@ -151,22 +149,13 @@ All pre-seeded test accounts use the password: `Password123!`
 
 ---
 
-## 🧪 Component B: Automated Test Suite
+## 📋 Testing & Quality Assurance Plan
 
-Component B includes an automated test plan in `tests/component_b_tests.php` covering 17 test cases across functional requirements, validation, security, and edge cases. Run it via CLI:
+In accordance with the assignment specifications (Section 6 & Group Report Deliverable), 15+ comprehensive test cases per component (functional, validation, security, and edge cases) are documented with step-by-step UI verification and screenshots in the submission report:
 
-```bash
-php tests/component_b_tests.php
-```
-
-All 17 tests validate:
-* **TC-B01 to B02:** Standardized currency formatting (`format_price()`).
-* **TC-B03 to B04:** Contextual HTML output escaping with `e()` preventing XSS.
-* **TC-B05 to B07:** CSRF token generation, cryptographic validation, and rejection of tampered tokens.
-* **TC-B08 to B09:** SQL Injection mitigation through GET sort parameter whitelisting.
-* **TC-B10 to B12:** Secure media upload multi-point checks (extension whitelist, binary MIME check via `finfo_file`, 2MB size cap, safe `UPLOAD_ERR_NO_FILE` handling).
-* **TC-B13 to B14:** `reduce_stock()` rejection of non-positive or negative deduction quantities.
-* **TC-B15 to B17:** Accurate categorization of inventory levels (`in_stock`, `low_stock`, `out_of_stock`).
+* **Component A (Identity & Security):** Password complexity, BCRYPT hash verification, brute-force lockout throttling (5 failed attempts), session fixation mitigation, role-based URL guards, and cryptographic password reset tokens.
+* **Component B (Menu & Inventory):** Currency formatting, XSS contextual output escaping (`e()`), CSRF token lifecycle, SQL Injection mitigation on sorting/filtering parameters, secure media file uploads (MIME/size/extension), atomic stock deduction safeguards, and inventory classification.
+* **Component C (Ordering & Tracking):** Cart dynamic totals calculation, dispatch fees vs. pickup waiving, coupon expiry and threshold validation, order code format compliance, order lifecycle transition validation (prevention of illegal state skipping), and transaction reference generation.
 
 ---
 
