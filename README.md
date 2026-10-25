@@ -114,7 +114,7 @@ urbaneats/
 
 2. **Database Import:**
    * Open phpMyAdmin (`http://localhost/phpmyadmin`) or MySQL CLI.
-   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all relational tables with indexes and constraints, and seeds 20+ realistic rows in each main table.
+   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all 9 relational tables with indexes and constraints, and seeds 20+ realistic rows in each table.
 
 3. **Database Configuration:**
    * Ensure `config/db.php` exists. If configuring a custom local MySQL password, edit `config/db.php`:
@@ -149,13 +149,14 @@ All pre-seeded test accounts use the password: `Password123!`
 
 ---
 
-## 📋 Testing & Quality Assurance Plan
+## 🧪 Testing Plan & Verification Evidence
 
-In accordance with the assignment specifications (Section 6 & Group Report Deliverable), 15+ comprehensive test cases per component (functional, validation, security, and edge cases) are documented with step-by-step UI verification and screenshots in the submission report:
+In accordance with Section 6 of the assignment specification, a comprehensive test plan covering at least 15 test cases per component (functional, validation, security, and edge cases) is documented in the Group Report with UI verification screenshots and results.
 
-* **Component A (Identity & Security):** Password complexity, BCRYPT hash verification, brute-force lockout throttling (5 failed attempts), session fixation mitigation, role-based URL guards, and cryptographic password reset tokens.
-* **Component B (Menu & Inventory):** Currency formatting, XSS contextual output escaping (`e()`), CSRF token lifecycle, SQL Injection mitigation on sorting/filtering parameters, secure media file uploads (MIME/size/extension), atomic stock deduction safeguards, and inventory classification.
-* **Component C (Ordering & Tracking):** Cart dynamic totals calculation, dispatch fees vs. pickup waiving, coupon expiry and threshold validation, order code format compliance, order lifecycle transition validation (prevention of illegal state skipping), and transaction reference generation.
+Key test areas verified across components:
+* **Component A (Identity & Access):** Password complexity validation, BCRYPT hashing verification, session fixation prevention, role guard authorization checks, login throttling (lockout after 5 failed attempts), token-based password reset, and system audit logging.
+* **Component B (Menu & Inventory):** Currency formatting (`format_price()`), contextual XSS escaping (`e()`), CSRF token protection, SQL Injection mitigation on GET query sorting, secure file uploads (MIME/size/extension), inventory classification (`in_stock`, `low_stock`, `out_of_stock`), and atomic `reduce_stock()` row locking.
+* **Component C (Ordering & Tracking):** Real-time cart calculations, delivery fee resolution, coupon validation (min spend, percentage, expiry, cap), transactional checkout with rollback integrity, order lifecycle state machine transitions, and simulated payment logging.
 
 ---
 
