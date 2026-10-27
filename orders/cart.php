@@ -124,7 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 3rem;">
     <div style="margin-bottom: 2rem;">
         <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
-            Component C &bull; Ordering Workflow
+            Ordering Workflow
         </span>
         <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0.25rem 0;">
             Your Shopping Cart

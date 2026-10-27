@@ -64,7 +64,7 @@ require_once __DIR__ . '/../includes/header.php';
     
     <div style="margin-bottom: 2rem; text-align: center;">
         <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
-            Component C &bull; Real-Time Fulfillment Tracking
+            Real-Time Fulfillment Tracking
         </span>
         <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0.25rem 0;">
             Order Status Tracker

@@ -165,7 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
             <span style="font-size: 1.6rem;">🍲</span>
             <span style="text-transform: uppercase; font-size: 0.8rem; font-weight: 700; color: var(--primary-600); letter-spacing: 0.05em;">
-                Component B &bull; Freshly Prepared Cloud Kitchen
+                Freshly Prepared Cloud Kitchen
             </span>
         </div>
         <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); letter-spacing: -0.025em; margin-bottom: 0.25rem;">

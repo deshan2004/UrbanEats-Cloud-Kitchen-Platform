@@ -181,7 +181,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
             <span style="font-size: 1.5rem;">📊</span>
             <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary-600);">
-                Component B &bull; Inventory Governance &amp; Restock Control
+                Inventory Governance &amp; Restock Control
             </span>
         </div>
         <h1 style="font-size: 2.1rem; font-weight: 800; color: var(--ink-900); letter-spacing: -0.02em;">

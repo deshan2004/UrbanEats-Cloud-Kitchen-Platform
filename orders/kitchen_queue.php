@@ -128,7 +128,7 @@ require_once __DIR__ . '/../includes/header.php';
                     Live Syncing
                 </span>
                 <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
-                    Component C &bull; Kitchen Operations
+                    Kitchen Operations
                 </span>
             </div>
             <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0 0 0.25rem; letter-spacing: -0.02em;">

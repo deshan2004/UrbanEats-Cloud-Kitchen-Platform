@@ -69,7 +69,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <div>
             <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary-600); text-transform: uppercase; letter-spacing: 0.05em;">
-                Component C &bull; Business Intelligence
+                Business Intelligence &bull; Analytics
             </span>
             <h1 style="font-size: 2.25rem; font-weight: 800; color: var(--ink-900); margin: 0.25rem 0;">
                 Executive Sales Report
