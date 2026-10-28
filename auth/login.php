@@ -40,10 +40,27 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_WINDOW_MINUTES = 15;
 
 /**
- * Checks if an IP or username is currently throttled due to >= 5 failed attempts in the last 15 mins.
+ * Checks if an IP address or username is currently throttled due to repeated failed logins.
+ * 
+ * SECURITY RATIONALE (OWASP A07 - Identification & Authentication Failures):
+ * Implements an intelligent sliding-window rate-limiting mechanism against Brute-Force
+ * and Credential-Stuffing dictionary attacks.
+ * 
+ * DESIGN HIGHLIGHTS:
+ * 1. Dual-Pivot Throttling: Inspects both target username AND client IP address.
+ *    This catches single-origin password guessing as well as distributed attacks on one user.
+ * 2. Sliding Time Window: Queries 'login_attempts' for failures within (NOW() - INTERVAL 15 MINUTE).
+ * 3. Dynamic Lockout Countdown: Computes the precise remaining lockout minutes ($secondsRemaining / 60)
+ *    so the UI can communicate an accurate unlock timer to the user.
+ *
+ * @param PDO $pdo Active database connection
+ * @param string $userIdentifier Username or email address attempted
+ * @param string $ipAddress Client IP address
+ * @return array ['is_locked' => bool, 'remaining_minutes' => int, 'recent_failures' => int]
  */
 function check_login_throttling(PDO $pdo, string $userIdentifier, string $ipAddress): array {
     try {
+        // Query failed attempts in the sliding 15-minute window using prepared statements
         $sql = "SELECT attempted_at 
                 FROM login_attempts 
                 WHERE (username = :username OR ip_address = :ip)
@@ -60,6 +77,7 @@ function check_login_throttling(PDO $pdo, string $userIdentifier, string $ipAddr
         $attempts = $stmt->fetchAll();
         $failureCount = count($attempts);
 
+        // Lockout condition: threshold reached
         if ($failureCount >= MAX_FAILED_ATTEMPTS) {
             $latestAttempt = strtotime($attempts[0]['attempted_at']);
             $unlockTime = $latestAttempt + (LOCKOUT_WINDOW_MINUTES * 60);
@@ -99,6 +117,7 @@ if ($throttleStatus['is_locked']) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
+    // 1. Anti-CSRF Token Validation (Protects against cross-site forged login requests)
     $csrfToken = $_POST['csrf_token'] ?? null;
     if (!verify_csrf_token($csrfToken)) {
         $error = 'Security session expired. Please refresh and try again.';
@@ -109,6 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
         if ($username === '' || $password === '') {
             $error = 'Please enter both your email/username and password.';
         } else {
+            // 2. Pre-Authentication Brute-Force Check for the specific username + IP pair
             $throttleStatus = check_login_throttling($pdo, $username, $clientIp);
             if ($throttleStatus['is_locked']) {
                 $isLockedOut = true;
@@ -120,6 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
                 );
                 log_action($pdo, null, 'ACCOUNT_LOCKED', "Lockout triggered for username '{$username}' from IP {$clientIp}");
             } else {
+                // 3. User Lookup using PDO Prepared Statements (Complete SQL Injection Immunity)
                 $stmt = $pdo->prepare(
                     "SELECT u.id, u.role_id, u.full_name, u.username, u.email, u.password_hash, u.is_active, r.role_name
                      FROM users u
@@ -133,7 +154,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
                 ]);
                 $user = $stmt->fetch();
 
+                // 4. Secure Password Verification via BCRYPT
+                // Uses password_verify() to safely evaluate plain-text password against stored hash with auto-salt.
                 if (!$user || !password_verify($password, $user['password_hash'])) {
+                    // Record failure event in login_attempts audit table
                     try {
                         $logStmt = $pdo->prepare(
                             "INSERT INTO login_attempts (ip_address, username, attempted_at, is_successful) 
@@ -159,10 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
                         $error = sprintf('Incorrect password. %d attempt(s) left.', $remainingAttempts);
                     }
                 } elseif ((int)$user['is_active'] !== 1) {
+                    // Account status check: reject login for suspended/deactivated users
                     $error = 'Your account has been deactivated. Please contact an UrbanEats administrator.';
                     log_action($pdo, (int)$user['id'], 'LOGIN_INACTIVE_ATTEMPT', "Deactivated user '{$username}' attempted login");
                 } else {
-                    // Success
+                    // 5. Successful Authentication Flow
+                    // Record successful attempt to reset consecutive failure tracking
                     try {
                         $successLogStmt = $pdo->prepare(
                             "INSERT INTO login_attempts (ip_address, username, attempted_at, is_successful) 
@@ -173,8 +199,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
                         error_log('[Login Success Log Error] ' . $e->getMessage());
                     }
 
+                    // SECURITY: Session Fixation Prevention (OWASP A07)
+                    // Discards previous unauthenticated session ID and issues a new cryptographically secure session ID.
                     session_regenerate_id(true);
 
+                    // Initialize authenticated session state
                     $_SESSION['user_id']       = (int)$user['id'];
                     $_SESSION['username']      = $user['username'];
                     $_SESSION['full_name']     = $user['full_name'];
@@ -183,10 +212,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$isLockedOut) {
                     $_SESSION['role_id']       = (int)$user['role_id'];
                     $_SESSION['last_activity'] = time();
 
+                    // Security audit traceability
                     log_action($pdo, (int)$user['id'], 'LOGIN_SUCCESS', "User authenticated successfully from IP {$clientIp}");
 
                     set_flash('success', "Welcome back, " . $user['full_name'] . "!");
 
+                    // Role-based post-login redirection
                     if ($user['role_name'] === 'admin') {
                         redirect(url('admin/users.php'));
                     } elseif ($user['role_name'] === 'kitchen_staff') {

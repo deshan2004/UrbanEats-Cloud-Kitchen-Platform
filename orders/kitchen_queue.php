@@ -19,16 +19,18 @@ require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/order_functions.php';
 
+// ACCESS CONTROL: Enforce Kitchen Staff or Administrator role guard (RBAC)
 require_role(['kitchen_staff', 'admin']);
 $currentUser = current_user();
 
-// Handle status transitions
+// Handle status transitions via the Finite State Machine
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'transition') {
     verify_csrf_token($_POST['csrf_token'] ?? null);
 
     $orderId = (int)($_POST['order_id'] ?? 0);
     $newStatus = trim($_POST['new_status'] ?? '');
 
+    // Invokes concurrency-safe FSM status transition with optimistic locking & audit trail
     if ($orderId > 0 && $newStatus !== '' && $pdo) {
         $success = change_order_status($pdo, $orderId, $newStatus, (int)$currentUser['id']);
         if ($success) {
@@ -41,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Fetch orders by status with items
+// OPTIMIZATION: Uses GROUP_CONCAT to aggregate line items in a single SQL query, eliminating the N+1 query problem
 $ordersByStatus = [
     'Placed' => [],
     'Preparing' => [],

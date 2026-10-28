@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 4. Validation: Username
+    // Strict alphanumeric whitelist regex prevents command/path injection and invalid chars
     if (empty($formData['username'])) {
         $errors['username'] = 'Username is required.';
     } elseif (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $formData['username'])) {
@@ -69,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 5. Validation: Email Address
+    // filter_var() enforces RFC 5322 standard email address format
     if (empty($formData['email'])) {
         $errors['email'] = 'Email address is required.';
     } elseif (!filter_var($formData['email'], FILTER_VALIDATE_EMAIL)) {
@@ -89,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['address'] = 'Delivery address is required for cloud kitchen order dispatch.';
     }
 
-    // 8. Validation: Password & Confirmation
+    // 8. Validation: Password Complexity (OWASP Password Security Guidelines)
+    // Enforces minimum length of 8 characters and character diversity (upper, lower, digit)
     if (empty($password)) {
         $errors['password'] = 'Password is required.';
     } elseif (strlen($password) < 8) {
@@ -104,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['confirm_password'] = 'Passwords do not match.';
     }
 
-    // 9. Database Uniqueness Checks
+    // 9. Database Uniqueness Checks using Prepared Statements (Prevents account collisions)
     if (empty($errors)) {
         if ($pdo === null) {
             $errors['database'] = 'Database connection is currently unavailable. Please verify your MySQL server.';
@@ -136,8 +139,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $roleRow = $roleStmt->fetch();
             $roleId = $roleRow ? (int)$roleRow['id'] : 3;
 
+            // SECURITY: Cryptographic Password Hashing (OWASP A02: Cryptographic Failures)
+            // - Algorithm: BCRYPT (adaptive key derivation based on the Blowfish cipher).
+            // - Cost Factor: 12 (2^12 = 4,096 hashing iterations).
+            // - Salt: Handled automatically by PHP's CSPRNG inside password_hash().
             $passwordHash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
+            // Parameterized INSERT query completely eliminates SQL Injection vulnerabilities
             $insertSql = 'INSERT INTO users (role_id, full_name, username, email, phone, address, password_hash, is_active, created_at)
                           VALUES (:role_id, :full_name, :username, :email, :phone, :address, :password_hash, 1, NOW())';
             
@@ -154,6 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $newUserId = (int)$pdo->lastInsertId();
 
+            // Traceability: Log successful customer self-registration
             log_action(
                 $pdo,
                 $newUserId,

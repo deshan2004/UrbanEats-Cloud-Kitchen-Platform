@@ -74,9 +74,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors) && $pdo) {
         try {
+            // =========================================================================
+            // COMPONENT C: ACID TRANSACTIONAL CHECKOUT ENGINE
+            // Ensures Atomicity, Consistency, Isolation, and Durability.
+            // Either all order records, payments, and stock deductions succeed,
+            // or the entire operation rolls back with zero side effects.
+            // =========================================================================
             $pdo->beginTransaction();
 
-            // 1. Recalculate and lock dishes to prevent client tampering
+            // 1. Server-Side Price & Stock Re-Verification (Mitigates Client-Side Price Tampering & Race Conditions)
+            // NEVER trusts prices stored in the browser session. Re-fetches price and stock directly
+            // from the database using pessimistic row-level locking (FOR UPDATE).
             $calculatedSubtotal = 0.00;
             $orderItems = [];
 
@@ -119,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $totalAmount = max(0.00, $calculatedSubtotal + $deliveryFee - $discountAmount);
             $orderCode = 'ORD-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
 
-            // 2. Insert into `orders`
+            // 2. Insert into `orders` Master Record
             $stmtOrder = $pdo->prepare(
                 "INSERT INTO orders (order_code, user_id, order_type, delivery_address, phone, notes, payment_method, subtotal, delivery_fee, discount_amount, total_amount, status, created_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Placed', NOW())"
@@ -140,7 +148,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $orderId = (int)$pdo->lastInsertId();
 
-            // 3. Insert into `order_items` and deduct live inventory using Component B inventory engine
+            // 3. Insert Historical Snapshot into `order_items` & Deduct Stock via Component B
+            // Storing price_at_purchase creates an immutable financial record that protects against future menu price updates.
             $stmtItem = $pdo->prepare(
                 "INSERT INTO order_items (order_id, dish_id, quantity, price_at_purchase)
                  VALUES (?, ?, ?, ?)"
@@ -157,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $oi['price'],
                 ]);
 
-                // Call Component B transaction-safe stock reduction (updates inventory & logs stock_movement)
+                // Inter-Component Contract: Atomic stock deduction with row-level locks and movement logging
                 if (function_exists('reduce_stock')) {
                     $reduced = reduce_stock($pdo, (int)$oi['dish_id'], (int)$oi['quantity'], "Order #{$orderCode}");
                     if (!$reduced) {
@@ -172,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
 
-            // 4. Record payment in `payments` table
+            // 4. Record Payment Ledger in `payments` Table
             $paymentStatus = ($paymentMethod === 'cod') ? 'Pending' : 'Completed';
             $txRef = 'TXN-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
             $stmtPayment = $pdo->prepare(
@@ -187,14 +196,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $txRef,
             ]);
 
-            // 5. Initial status in `order_status_history`
+            // 5. Initialize Workflow State Machine in `order_status_history`
             $stmtHistory = $pdo->prepare(
                 "INSERT INTO order_status_history (order_id, status, changed_by, changed_at)
                  VALUES (?, 'Placed', ?, NOW())"
             );
             $stmtHistory->execute([$orderId, (int)$currentUser['id']]);
 
-            // 6. System audit log
+            // 6. Security & Traceability Audit Log (Component A contract)
             if (function_exists('log_action')) {
                 log_action(
                     $pdo,
@@ -204,6 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
             }
 
+            // Commit transaction atomically
             $pdo->commit();
 
             // Clear session cart & coupon

@@ -24,7 +24,10 @@ $totalOrders = 0;
 $avgOrderValue = 0.00;
 
 if ($pdo) {
-    // 1. Top-selling dishes
+    // 1. Top-Selling Dishes via SQL Aggregation (SUM, JOIN, GROUP BY)
+    // CRITICAL: Uses oi.price_at_purchase rather than dishes.price to ensure historical financial
+    // accuracy even if menu prices were changed after order fulfillment.
+    // Excludes 'Cancelled' orders from volume and revenue calculations.
     $stmt = $pdo->prepare(
         "SELECT d.name, SUM(oi.quantity) AS total_qty,
                 SUM(oi.quantity * oi.price_at_purchase) AS revenue
@@ -39,7 +42,7 @@ if ($pdo) {
     $stmt->execute($range);
     $topDishes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. Orders per status
+    // 2. Order Distribution & Status Grouping via SQL COUNT(*) and SUM()
     $stmt2 = $pdo->prepare(
         "SELECT status, COUNT(*) AS cnt, SUM(total_amount) AS sales
          FROM orders 
@@ -49,7 +52,7 @@ if ($pdo) {
     $stmt2->execute($range);
     $byStatus = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 
-    // 3. Aggregate totals
+    // 3. Compute Executive Financial Metrics (Gross Sales, Average Order Value)
     foreach ($byStatus as $r) {
         $totalOrders += (int)$r['cnt'];
         if ($r['status'] !== 'Cancelled') {

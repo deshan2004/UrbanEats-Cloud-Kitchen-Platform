@@ -31,6 +31,7 @@ $userId = (int)$currentUser['id'];
 // Handle POST: Stock Adjustment (Restock, Wastage, Adjustment)
 // -------------------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'adjust_stock') {
+    // 1. Anti-CSRF Token Verification
     if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
         set_flash('error', 'Security token expired. Please try again.');
         redirect(url('menu/stock.php'));
@@ -41,17 +42,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $quantityRaw  = (int)($_POST['quantity_change'] ?? 0);
     $reason       = trim((string)($_POST['reason'] ?? ''));
 
+    // Whitelist movement types to prevent arbitrary inventory mutations
     if ($dishId <= 0 || !in_array($movementType, ['restock', 'wastage', 'adjustment'], true)) {
         set_flash('error', 'Invalid stock adjustment parameters.');
         redirect(url('menu/stock.php'));
     }
 
+    // Mandatory Audit Compliance: Ensure reason is supplied to deter unauthorized wastage logging
     if ($reason === '') {
         set_flash('error', 'A mandatory reason or operational note must be provided for every stock adjustment.');
         redirect(url('menu/stock.php'));
     }
 
-    // Determine signed quantity change
+    // Determine strictly signed quantity change to prevent mathematical tampering
     if ($movementType === 'restock') {
         $qtyChange = abs($quantityRaw);
         if ($qtyChange <= 0) {
@@ -72,7 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 
-    // Execute atomic adjustment
+    // CONCURRENCY SAFEGUARD: Call adjust_stock() which executes within an ACID transaction
+    // with pessimistic row locking ('FOR UPDATE') to prevent negative inventory balance and race conditions.
     $success = adjust_stock($pdo, $dishId, $userId, $movementType, $qtyChange, $reason);
 
     if ($success) {

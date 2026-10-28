@@ -100,14 +100,24 @@ function get_client_ip(): string {
 }
 
 /**
- * Component A contract function: writes an action to the audit_log table.
- * Used across Components A, B, and C for security and traceability.
+ * Component A Contract Function: System-Wide Security Audit Logger.
+ * 
+ * DESIGN & SECURITY RATIONALE:
+ * Shared service contract utilized across Components A, B, and C to enforce
+ * forensic traceability and non-repudiation across the entire cloud kitchen platform.
+ * 
+ * KEY SAFEGUARDS:
+ * 1. Foreign Key Integrity: Validates $user_id against the users table before insertion.
+ *    If invalid or unauthenticated (e.g. failed login, guest checkout), gracefully stores NULL.
+ * 2. Client Metadata Capture: Automatically attaches the client's validated IP address
+ *    (via get_client_ip()) and browser User-Agent string.
+ * 3. Boundary Truncation: Restricts strings using mb_substr() to prevent database buffer overflows.
  *
- * @param PDO $pdo
- * @param int|null $user_id
- * @param string $action
- * @param string|null $details
- * @return bool
+ * @param PDO $pdo Active PDO instance
+ * @param int|null $user_id Authenticated user ID, or null for anonymous/system actions
+ * @param string $action Standardized uppercase action tag (e.g., 'LOGIN_SUCCESS', 'ORDER_CREATED')
+ * @param string|null $details Descriptive context or audit payload
+ * @return bool True if logged successfully, false on error
  */
 function log_action(PDO $pdo, ?int $user_id, string $action, ?string $details = null): bool {
     try {

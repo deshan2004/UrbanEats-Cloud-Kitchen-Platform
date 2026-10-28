@@ -17,15 +17,17 @@ if (is_logged_in()) {
     $userId = (int)($_SESSION['user_id'] ?? 0);
     $username = (string)($_SESSION['username'] ?? 'unknown');
 
-    // Audit log the logout event
+    // 1. Audit Logging: Record session termination before session variables are cleared
     if ($pdo && $userId > 0) {
         log_action($pdo, $userId, 'LOGOUT', "User '{$username}' logged out successfully");
     }
 
-    // Unset all session variables
+    // SECURITY: Comprehensive 3-Step Session Teardown (OWASP Session Invalidation)
+    // Step A: Clear all server-side session data from memory
     $_SESSION = [];
 
-    // Delete the session cookie if ini settings allow
+    // Step B: Explicitly expire and overwrite the browser's session cookie in the past (time() - 42000)
+    // Prevents zombie cookie retention in browser storage
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
         setcookie(
@@ -39,7 +41,7 @@ if (is_logged_in()) {
         );
     }
 
-    // Destroy session completely
+    // Step C: Destroy the active server session file/backend storage
     session_destroy();
 }
 

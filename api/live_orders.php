@@ -9,6 +9,7 @@
 
 declare(strict_types=1);
 
+// HTTP Headers: Prevent proxy/browser caching of real-time operational polling data
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
@@ -18,7 +19,7 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/order_functions.php';
 
-// Route guard: Accessible only by Administrator and Kitchen Staff
+// Route Guard: Enforce strict role authorization for asynchronous API endpoints (Returns JSON 403)
 if (!is_logged_in() || !in_array($_SESSION['role'] ?? '', ['admin', 'kitchen_staff'], true)) {
     http_response_code(403);
     echo json_encode([

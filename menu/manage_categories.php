@@ -132,6 +132,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ACTION 3: DELETE / TOGGLE CATEGORY WITH REFERENTIAL CHECK
+    // REFERENTIAL INTEGRITY SAFEGUARD:
+    // Prevents accidental cascading deletion or orphaned records in dishes table.
+    // Verifies whether any dishes reference this category before allowing a DELETE.
     if ($action === 'delete_category') {
         $catId = (int)($_POST['category_id'] ?? 0);
 

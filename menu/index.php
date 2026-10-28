@@ -34,7 +34,14 @@ $searchQuery = trim((string)($_GET['q'] ?? ''));
 // Category Filter (by slug or empty for All)
 $selectedCategorySlug = trim((string)($_GET['cat'] ?? ''));
 
-// Sort Whitelisting: Maps client GET parameter to immutable SQL ORDER BY fragments
+/**
+ * SECURITY RATIONALE (ORDER BY SQL INJECTION PREVENTION):
+ * PDO Prepared statements can only bind data values (literals), NOT SQL identifiers
+ * or column/direction keywords. Passing user input directly into an ORDER BY clause
+ * creates an exploitable SQL Injection vector.
+ * We enforce an immutable Whitelist Mapping ($sortMap); any unauthorized or malicious
+ * sort parameter defaults safely to 'd.id DESC'.
+ */
 $sortParam = trim((string)($_GET['sort'] ?? 'newest'));
 $sortMap = [
     'newest'     => 'd.id DESC',

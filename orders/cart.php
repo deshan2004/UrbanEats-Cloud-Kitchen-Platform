@@ -15,12 +15,14 @@ require_once __DIR__ . '/../includes/order_functions.php';
 
 $currentUser = current_user();
 
-// Initialize session cart as clean empty array if not set
+// ARCHITECTURE: Session-Backed Cart State Machine
+// Stores items in $_SESSION['cart'] indexed by dish_id.
+// Avoids ephemeral database writes for guest/uncommitted carts while maintaining high performance.
 if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
     $_SESSION['cart'] = [];
 }
 
-// Handle cart actions (increase, decrease, remove, clear, add)
+// Handle cart mutation actions (increase, decrease, remove, clear, add)
 $action = $_GET['action'] ?? null;
 $dishId = isset($_GET['dish_id']) ? (int)$_GET['dish_id'] : 0;
 
@@ -44,7 +46,7 @@ if ($action === 'increase' && $dishId > 0 && isset($_SESSION['cart'][$dishId])) 
     set_flash('info', 'Cart cleared.');
     redirect(url('orders/cart.php'));
 } elseif ($action === 'add' && $dishId > 0) {
-    // Add dish from DB
+    // Verified addition from DB to ensure dish is active and exists
     if ($pdo) {
         $stmt = $pdo->prepare("SELECT * FROM dishes WHERE dish_id = ? AND is_active = 1");
         $stmt->execute([$dishId]);
@@ -67,12 +69,13 @@ if ($action === 'increase' && $dishId > 0 && isset($_SESSION['cart'][$dishId])) 
     redirect(url('orders/cart.php'));
 }
 
-// Handle Coupon Application
+// Server-Side Coupon Verification Handler
+// Validates minimum subtotal, expiry, and calculates discount server-side
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['apply_coupon'])) {
     verify_csrf_token($_POST['csrf_token'] ?? null);
     $couponCode = trim($_POST['coupon_code'] ?? '');
     
-    // Calculate current subtotal
+    // Dynamically calculate current cart subtotal
     $currentSubtotal = 0.0;
     foreach ($_SESSION['cart'] as $item) {
         $currentSubtotal += (float)$item['price'] * (int)$item['quantity'];

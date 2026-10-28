@@ -31,12 +31,12 @@ if ($pdo) {
     }
 
     if ($order) {
-        // Fetch timeline history
+        // Fetch timeline history in chronological order to render the visual status progress timeline
         $stmtH = $pdo->prepare("SELECT * FROM order_status_history WHERE order_id = ? ORDER BY changed_at ASC");
         $stmtH->execute([(int)$order['order_id']]);
         $history = $stmtH->fetchAll();
 
-        // Fetch items
+        // Fetch line items joining dishes catalog for presentation
         $stmtI = $pdo->prepare(
             "SELECT oi.*, d.name AS dish_name 
              FROM order_items oi
@@ -48,7 +48,7 @@ if ($pdo) {
     }
 }
 
-// Stage definitions
+// Stage Definitions: Dynamic state progression mapping based on fulfillment modality (Delivery vs Pickup)
 $stages = ['Placed', 'Preparing', 'Ready', 'Out for Delivery', 'Completed'];
 $currentStatus = $order['status'] ?? '';
 $isPickup = ($order['order_type'] ?? '') === 'pickup';

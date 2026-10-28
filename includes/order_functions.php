@@ -10,9 +10,17 @@ require_once __DIR__ . '/errors.php';
 require_once __DIR__ . '/functions.php';
 
 /**
- * Each status and the statuses it is allowed to move to.
+ * Finite State Machine (FSM): Order Lifecycle Transition Matrix.
  * 
- * @return array<string, array<string>>
+ * ARCHITECTURAL DESIGN:
+ * Strictly enforces directional state transitions to maintain business process integrity.
+ * Prevents illegal state jumps (e.g., an order jumping from 'Placed' directly to 'Completed'
+ * without kitchen preparation and fulfillment validation).
+ * 
+ * Lifecycle Path:
+ * Placed ➔ Preparing ➔ Ready ➔ Out for Delivery / Collected ➔ Completed (or Cancelled)
+ * 
+ * @return array<string, array<string>> Map of current status => permitted next statuses
  */
 function allowed_transitions(): array {
     return [
@@ -27,31 +35,45 @@ function allowed_transitions(): array {
 }
 
 /**
- * Change an order's status safely and save a history record.
+ * Executes a concurrency-safe order status transition with audit history.
  * 
- * @param PDO $pdo
- * @param int $orderId
- * @param string $newStatus
- * @param int $userId
- * @return bool
+ * CONCURRENCY & TRANSACTION SAFEGUARDS:
+ * 1. Pessimistic Row-Level Locking (SELECT ... FOR UPDATE):
+ *    Locks the specific order record in MySQL, preventing race conditions if multiple staff
+ *    or automated webhooks attempt to advance status concurrently.
+ * 2. FSM Whitelist Verification:
+ *    Validates that $newStatus is permitted from the freshly locked $current state.
+ * 3. Atomic Multi-Table Mutation:
+ *    Updates orders table and appends an immutable entry to order_status_history within
+ *    the same ACID transaction. Full rollback executed on any failure.
+ * 
+ * @param PDO $pdo Active PDO connection
+ * @param int $orderId Target order primary key
+ * @param string $newStatus Requested target status
+ * @param int $userId Authenticated user ID executing the change
+ * @return bool True on successful atomic transition, false on invalid transition or failure
  */
 function change_order_status(PDO $pdo, int $orderId, string $newStatus, int $userId): bool {
     try {
         $pdo->beginTransaction();
 
+        // 1. Acquire pessimistic write lock on the order row
         $stmt = $pdo->prepare("SELECT status FROM orders WHERE order_id = ? FOR UPDATE");
         $stmt->execute([$orderId]);
         $current = $stmt->fetchColumn();
 
+        // 2. Validate requested state change against FSM transition matrix
         $allowed = allowed_transitions();
         if ($current === false || !in_array($newStatus, $allowed[$current] ?? [], true)) {
             $pdo->rollBack();
             return false;
         }
 
+        // 3. Update order state
         $pdo->prepare("UPDATE orders SET status = ?, updated_at = NOW() WHERE order_id = ?")
             ->execute([$newStatus, $orderId]);
 
+        // 4. Record chronological audit trail in order_status_history
         $pdo->prepare(
             "INSERT INTO order_status_history (order_id, status, changed_by, changed_at)
              VALUES (?, ?, ?, NOW())"
@@ -59,6 +81,7 @@ function change_order_status(PDO $pdo, int $orderId, string $newStatus, int $use
 
         $pdo->commit();
 
+        // 5. System-wide audit log for traceability
         if (function_exists('log_action')) {
             log_action(
                 $pdo,
@@ -79,13 +102,13 @@ function change_order_status(PDO $pdo, int $orderId, string $newStatus, int $use
 }
 
 /**
- * Validate a coupon for a given order subtotal.
- * Returns [true, $couponRow] if valid, or [false, 'error message'].
+ * Server-side coupon verification and mathematical discount calculation.
+ * Never trusts client-side discounted prices; validates validity, expiry, and minimum cart value.
  * 
  * @param PDO $pdo
- * @param string $code
- * @param float $subtotal
- * @return array{0: bool, 1: array|string}
+ * @param string $code Raw coupon code from checkout request
+ * @param float $subtotal Current validated cart subtotal
+ * @return array{0: bool, 1: array|string} [true, $couponRowWithDiscount] OR [false, $errorMessage]
  */
 function validate_coupon(PDO $pdo, string $code, float $subtotal): array {
     $code = strtoupper(trim($code));

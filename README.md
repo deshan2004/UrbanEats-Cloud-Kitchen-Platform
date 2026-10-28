@@ -1,186 +1,114 @@
 # UrbanEats — Cloud Kitchen Web Platform
 
-UrbanEats is a robust, modular, and database-driven cloud kitchen web platform designed and built for **IT3113: Advanced Web Technologies** (Year 3, Semester 1). The application handles end-to-end cloud kitchen operations—from public customer ordering and real-time order tracking to kitchen fulfillment queues, stock control, and administrative business intelligence.
+A complete, database-driven cloud kitchen web application built for **IT3113: Advanced Web Technologies** (Year 3, Semester 1). The system manages end-to-end cloud kitchen operations: user authentication, menu catalog and stock control, customer cart and checkout, kitchen fulfillment queues, and administrative sales reporting.
 
-Built strictly using **vanilla HTML5, CSS3, PHP 8.x, and MySQL/MariaDB (PDO)** without external web or CSS frameworks.
-
----
-
-## 👥 Team & Component Allocation
-
-| Team Member | Component | Focus Area |
-| :--- | :--- | :--- |
-| **Student 1** | **Component A** | Identity, Access Control & Administration |
-| **Student 2** | **Component B** | Menu, Catalogue & Inventory Control |
-| **Student 3** | **Component C** | Ordering, Payments, Workflow & Sales Analytics |
+**Technology Stack:** Native PHP 8.x, MySQL / MariaDB (PDO with Prepared Statements), HTML5, Vanilla CSS3 (No CSS/PHP frameworks).
 
 ---
 
-## 🚀 Key Features by Component
+## 👥 Team Members & Component Allocation
 
-### Component A: Identity, Access & Administration
-* **Authentication & Hardening:** Secure registration and login with `password_hash()` (BCRYPT) and `password_verify()`. Session fixation prevention via `session_regenerate_id()`.
-* **Access Control:** Centralized role guard (`includes/auth.php`) enforcing permissions across `Customer`, `Kitchen Staff`, and `Admin`. Custom HTTP 403 access-denied handling.
-* **Brute-Force Throttling:** Temporary account lockout after 5 consecutive failed login attempts tracked via `login_attempts`.
-* **Password Recovery:** Time-limited, secure token-based password reset mechanism.
-* **Audit Trail:** Reusable system logger `log_action($pdo, $user_id, $action, $details)` invoked across components for compliance and security tracking.
-* **User Management:** Administrator panel to search, filter, activate/deactivate accounts, and adjust user roles.
-
-### Component B: Menu, Catalogue & Inventory
-* **Public Catalogue:** Dynamic menu browsing with category tabs, keyword search, price/name sorting, and server-side pagination (whitelisted query parameters).
-* **Dish Presentation:** Dedicated dish detail view displaying live stock availability, descriptions, and pricing in LKR.
-* **Staff Item Management:** Full CRUD suite for categories and dishes with soft-delete (`is_active` flag) preservation to prevent historical order corruption.
-* **Secure Media Uploads:** Multi-layer file validation (MIME-type check, whitelisted extensions, file size limit) with randomized server-side renaming outside executable web paths.
-* **Real-Time Inventory Engine:** Live stock monitoring with low-stock alerts and atomic deductions (`reduce_stock($dish_id, $qty)`) with database row-level locking. Full stock movement audit log (restock vs. wastage).
-
-### Component C: Ordering, Payment & Tracking
-* **Cart & Pricing Integrity:** Session-backed cart recalculating live item totals and dish availability against the database upon checkout (client-side price bypass mitigation).
-* **Atomic Checkout:** ACID-compliant MySQL transaction encapsulating order record insertion, line-item insertion (`order_items` locking historical purchase price), simulated payment tracking, coupon consumption, and inventory deduction. Automatic rollback on failure.
-* **Order Lifecycle Workflow:** Controlled multi-stage progression:  
-  `Placed` ➔ `Preparing` ➔ `Ready` ➔ `Out for Delivery` / `Collected` ➔ `Completed` (or `Cancelled`).
-* **Customer Self-Service:** Detailed order history, printable invoice view, and visual status timeline.
-* **Kitchen & Operations Queue:** Live fulfillment console for kitchen staff to transition order states.
-* **Executive Analytics:** Admin sales reporting featuring customizable date filters, gross revenue metrics, order status distribution, and top-selling dishes using SQL aggregates (`JOIN`, `GROUP BY`, `SUM`, `COUNT`).
-
----
-
-## 🛠️ Technology Stack & Architecture Constraints
-
-* **Back-End:** PHP 8.x (Strict Native Standard — No frameworks like Laravel, Symfony, or CodeIgniter)
-* **Database:** MySQL / MariaDB via **PHP Data Objects (PDO)** with prepared statements and parameter binding
-* **Front-End:** Semantic HTML5, Vanilla Hand-Written CSS3 with CSS custom properties (variables), responsive breakpoints (`360px`, `768px`, `1200px`), minimal Vanilla JavaScript for progressive enhancement
-* **Security Layer:** Anti-CSRF token verification on all POST requests, `htmlspecialchars()` contextual output escaping, strict session timeouts, custom exception/error handler logging to `logs/error.log`
-
----
-
-## 📂 Project Directory Structure
-
-```text
-urbaneats/
-├── config/
-│   ├── config.sample.php       # Template database credentials
-│   └── db.php                  # PDO connection singleton (ignored by git)
-├── includes/
-│   ├── header.php              # Global navigation bar (role-aware)
-│   ├── footer.php              # Global footer layout
-│   ├── auth.php                # Authentication guards (require_login, require_role)
-│   ├── csrf.php                # Token generation & verification helpers
-│   ├── functions.php           # Shared utilities (formatting, stock & audit calls)
-│   └── errors.php              # Custom global error & exception handlers
-├── public/
-│   ├── index.php               # Landing portal and public menu view
-│   ├── css/
-│   │   └── style.css           # Global responsive CSS stylesheet
-│   └── uploads/                # Sanitized dish image uploads
-├── auth/
-│   ├── register.php            # Customer registration
-│   ├── login.php               # System login with throttling
-│   ├── logout.php              # Safe session destruction
-│   ├── profile.php             # User profile update & password change
-│   └── reset.php               # Token-based password recovery
-├── admin/
-│   ├── dashboard.php           # Admin control center
-│   ├── users.php               # User role and status administration
-│   ├── audit_log.php           # System-wide operational logs
-│   └── reports.php             # Sales, revenue, and product analytics
-├── menu/
-│   ├── index.php               # Filterable, paginated catalogue
-│   ├── detail.php              # Single dish view
-│   ├── manage_dishes.php       # Staff dish CRUD & image management
-│   ├── manage_categories.php   # Category CRUD
-│   └── stock.php               # Inventory adjustments & movement records
-├── orders/
-│   ├── cart.php                # Shopping cart management
-│   ├── checkout.php            # Transactional order placement
-│   ├── confirmation.php        # Printable invoice / order receipt
-│   ├── history.php             # Customer past order listing
-│   ├── tracking.php            # Live order timeline tracker
-│   └── kitchen_queue.php       # Kitchen staff order processing dashboard
-├── database/
-│   ├── urbaneats_db.sql        # Database schema, foreign keys & 20+ seed rows
-│   └── generate_images.php     # Starter dish placeholder generator
-├── logs/
-│   └── error.log               # Server-side application error log
-└── README.md
-
----
-
-## ⚙️ Installation & Setup Instructions
-
-1. **Prerequisites:**
-   * PHP 8.1 or higher (native standard CLI/module).
-   * MySQL / MariaDB (via XAMPP, WAMP, LAMP, or standalone).
-   * Apache or PHP built-in web server.
-
-2. **Database Import:**
-   * Open phpMyAdmin (`http://localhost/phpmyadmin`) or MySQL CLI.
-   * Import `database/urbaneats_db.sql`. This creates the `urbaneats_db` database, sets up all 9 relational tables with indexes and constraints, and seeds 20+ realistic rows in each table.
-
-3. **Database Configuration:**
-   * Ensure `config/db.php` exists. If configuring a custom local MySQL password, edit `config/db.php`:
-     ```php
-     define('DB_HOST', '127.0.0.1');
-     define('DB_PORT', '3306');
-     define('DB_NAME', 'urbaneats_db');
-     define('DB_USER', 'root');
-     define('DB_PASS', ''); // Set your MySQL password if any
-     ```
-
-4. **Running Locally:**
-   * Start Apache and MySQL in XAMPP, or start PHP's built-in development server from the project root:
-     ```bash
-     php -S localhost:8000
-     ```
-   * Open your browser at `http://localhost:8000/`.
-
----
-
-## 🔑 Test Login Credentials (Seed Accounts)
-
-All pre-seeded test accounts use the password: `Password123!`
-
-| Role | Username | Email | Access Scope |
+| Student Name | Student ID | Component | Allocated Scope |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `admin@urbaneats.lk` | System governance, users, audit logs, reports |
-| **Kitchen Staff** | `chef_kasun` | `kasun@urbaneats.lk` | Dishes CRUD, categories, stock adjustments, order fulfillment |
-| **Kitchen Staff** | `chef_dilan` | `dilan@urbaneats.lk` | Menu catalogue management, kitchen order queue, inventory restock |
-| **Customer** | `anuki99` | `anuki.f@gmail.com` | Browse menu, cart, checkout, order tracking |
-| **Customer** | `kavindu_j` | `kavindu.j@outlook.com` | Regular customer ordering and order history |
+| **Deshan Siriwardhana** | `IT_UGC_001/B005-B/0009` | **Component A** | Identity, Access Control & System Administration |
+| **Chanula Wijerathna** | `IT_UGC_001/B005-A/0012` | **Component B** | Menu, Catalogue & Inventory Control |
+| **Thilakshi Nethmini** | `IT_UGC_001/B005-B/0001` | **Component C** | Ordering, Payments, Workflow & Sales Analytics |
+
+* **Institution:** CINEC Campus
+* **Module Coordinator:** Ms. Nethmi Mohotti
+* **Submission Date:** 28th October 2026
 
 ---
 
-## 🧪 Testing Plan & Verification Evidence
+## ⚙️ Setup & Installation Instructions
 
-In accordance with Section 6 of the assignment specification, a comprehensive test plan covering at least 15 test cases per component (functional, validation, security, and edge cases) is documented in the Group Report with UI verification screenshots and results.
+Follow these steps to set up and run the project locally using XAMPP (or WAMP/LAMP).
 
-Key test areas verified across components:
-* **Component A (Identity & Access):** Password complexity validation, BCRYPT hashing verification, session fixation prevention, role guard authorization checks, login throttling (lockout after 5 failed attempts), token-based password reset, and system audit logging.
-* **Component B (Menu & Inventory):** Currency formatting (`format_price()`), contextual XSS escaping (`e()`), CSRF token protection, SQL Injection mitigation on GET query sorting, secure file uploads (MIME/size/extension), inventory classification (`in_stock`, `low_stock`, `out_of_stock`), and atomic `reduce_stock()` row locking.
-* **Component C (Ordering & Tracking):** Real-time cart calculations, delivery fee resolution, coupon validation (min spend, percentage, expiry, cap), transactional checkout with rollback integrity, order lifecycle state machine transitions, and simulated payment logging.
+### 1. Prerequisites
+* **Web Server & PHP:** PHP 8.0 or higher.
+* **Database:** MySQL 5.7+ or MariaDB 10.4+.
+* **Environment:** XAMPP / WAMP / LAMP installed.
 
----
+### 2. Project Placement
+Clone or extract the project folder into your web server's root directory:
+* **XAMPP (Windows):** `C:/xampp/htdocs/urbaneats`
+* **XAMPP (macOS):** `/Applications/XAMPP/xamppfiles/htdocs/urbaneats`
 
-## 🎓 Component B Viva Defense Guide (Appendix B Questions)
+### 3. Database Import
+1. Start **Apache** and **MySQL** from your XAMPP Control Panel.
+2. Open **phpMyAdmin** in your browser (`http://localhost/phpmyadmin`).
+3. Click on **Import** in the top navigation.
+4. Select the file: `database/urbaneats_db.sql`.
+5. Click **Import** (or **Go**).
+   > *Note:* The SQL script will automatically create the `urbaneats_db` database, tables, relationships, and populate seed data (20+ realistic rows per main table).
 
-### Q1: Show how the search and pagination query is built. How do you stop SQL injection through the sort parameter?
-* **Answer:** All search terms and category IDs are passed through PDO prepared statements with parameter binding (`:search_name`, `:category_slug`). Because SQL does not allow binding column names or `ASC`/`DESC` directions in `ORDER BY` clauses via `?` or `:param`, we implement a **strict PHP whitelist map** (`$sortMap = ['newest' => 'd.id DESC', 'price_asc' => 'd.price ASC', ...]`). Any input that does not strictly match a key in the whitelist is rejected and falls back safely to `d.id DESC`. Thus, no client input ever reaches SQL concatenation.
+### 4. Database Configuration
+The database connection configuration is located at `config/db.php`.  
+If running on default local XAMPP settings, no modification is needed:
 
-### Q2: What checks does your image upload perform, and why is the file extension alone not enough?
-* **Answer:** An extension check alone (e.g., checking if filename ends with `.jpg`) is vulnerable to file spoofing (e.g. an attacker uploading an executable script disguised as `exploit.php.jpg` or embedding PHP tags within an image file). Our upload routine in `upload_dish_image()` executes a multi-point defense:
-  1. Checks standard `$_FILES['image']['error'] === UPLOAD_ERR_OK`.
-  2. Enforces maximum 2MB file size ceiling.
-  3. Checks extension against whitelisted set `['jpg', 'jpeg', 'png', 'webp']`.
-  4. Performs **real binary inspection** using PHP's `finfo_file(FILEINFO_MIME_TYPE)` to examine magic bytes, strictly whitelisting `image/jpeg`, `image/png`, and `image/webp`.
-  5. Cryptographically renames the file using `bin2hex(random_bytes(10))` to eliminate path traversal and null byte injections.
-  6. Stores uploads in `public/uploads/` protected by a `.htaccess` file with `Require all denied` for executable script extensions.
+```php
+define('DB_HOST', '127.0.0.1');
+define('DB_PORT', '3306');
+define('DB_NAME', 'urbaneats_db');
+define('DB_USER', 'root');
+define('DB_PASS', ''); // Leave empty for default XAMPP, or enter your MySQL password
+```
 
-### Q3: Explain why `reduce_stock()` uses a transaction or a conditional UPDATE, and what happens with two simultaneous orders for the last item.
-* **Answer:** If two customers simultaneously attempt to buy the last remaining portion of a dish, a naive `SELECT quantity` followed by `UPDATE quantity = quantity - 1` causes a **race condition** (both see quantity = 1, both subtract 1, inventory drops to -1, resulting in overselling).  
-  In `reduce_stock()`, we use an **atomic conditional UPDATE with row locking**:
-  ```sql
-  UPDATE inventory 
-  SET quantity = quantity - :qty 
-  WHERE dish_id = :dish_id AND quantity >= :qty
+### 5. Running the Application
+* **Via Apache:** Open your browser and navigate to:
+  ```text
+  http://localhost/urbaneats/
   ```
-  MySQL's row-level write lock ensures that the first transaction locks the inventory row and deducts the stock to 0. When the second transaction acquires the row lock, its `WHERE quantity >= 1` condition evaluates to false, resulting in `rowCount() === 0`. The function detects 0 rows affected, rolls back, returns `false`, and alerts Component C that the dish is sold out, guaranteeing the stock never drops below zero.
+  *(or `http://localhost/urbaneats/public/` depending on your virtual host root)*
+* **Via PHP Built-in Server (Alternative):**
+  Open terminal inside the project root and run:
+  ```bash
+  php -S localhost:8000
+  ```
+  Then visit: `http://localhost:8000`
 
+---
+
+## 🔑 Test Login Accounts
+
+All pre-seeded test accounts use the common default password: **`Password123!`**
+
+| Role | Username | Email | Testing Scope & Purpose |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin` | `admin@urbaneats.lk` | Full system control, user activation/roles, audit log viewer, sales reports |
+| **Kitchen Staff** | `chef_kasun` | `kasun@urbaneats.lk` | Kitchen queue order processing, menu management, stock adjustments |
+| **Kitchen Staff** | `chef_dilan` | `dilan@urbaneats.lk` | Order workflow updates, inventory restock and wastage logging |
+| **Customer** | `anuki99` | `anuki.f@gmail.com` | Menu browsing, cart management, coupon checkout, order tracking |
+| **Customer** | `kavindu_j` | `kavindu.j@outlook.com` | Customer order history, invoice download/print, profile edit |
+
+---
+
+## 🚀 List of Features per Component
+
+### Component A: Identity, Access & Administration (Deshan Siriwardhana)
+* **Registration & Secure Login:** User registration and authentication with BCRYPT password hashing (`password_hash()` and `password_verify()`).
+* **Session Hardening:** Session regeneration (`session_regenerate_id()`) on login to prevent session fixation, strict session timeouts, and secure session destruction on logout.
+* **Role-Based Access Control (RBAC):** Centralized reusable guard functions (`require_login()` and `require_role()`) protecting all privileged pages with custom 403 Access Denied handling.
+* **Brute-Force Login Throttling:** Automatic temporary account lockout after 5 consecutive failed login attempts (`login_attempts` table).
+* **Password Reset Workflow:** Secure, time-limited token generation for password recovery.
+* **Centralized System Audit Log:** Reusable `log_action()` function recording critical security, catalog, and ordering events into `audit_log`.
+* **Administrator User Management:** Search, filter by role, activate/deactivate accounts, and change user roles from the admin panel.
+
+### Component B: Menu, Catalogue & Inventory (Chanula Wijerathna)
+* **Public Menu Catalog:** Responsive menu with category filters, keyword search, price and name sorting, and server-side pagination with whitelisted query parameters.
+* **Dish Detail View:** Single dish page showing dish images, descriptions, live availability, and prices in LKR.
+* **Staff Dish & Category CRUD:** Forms to add, edit, and soft-delete dishes (`is_active` flag) and manage food categories.
+* **Secure Image Uploads:** Multi-point server validation (MIME-type binary inspection, file extension whitelist, file size limit) and cryptographically randomized filenames stored outside execution paths.
+* **Real-Time Stock Monitoring:** Live inventory dashboard with visual alerts for low-stock and out-of-stock items.
+* **Stock Adjustments & Movement Audit:** Logging restock and wastage events with reasons and staff user tracking.
+* **Transaction-Safe Stock Reduction:** `reduce_stock($dish_id, $qty)` function using conditional database updates to eliminate race conditions and prevent negative stock.
+
+### Component C: Ordering, Payment & Tracking (Thilakshi Nethmini)
+* **Session-Based Cart:** Add, update quantity, remove dishes, and calculate live subtotal and delivery charges.
+* **Price Re-Verification at Checkout:** Server-side validation of dish prices and availability directly from the database at checkout (prices from browser are never trusted).
+* **Atomic Transactional Checkout:** Single ACID MySQL transaction executing order creation, historical purchase price snapshot in `order_items`, stock deduction, coupon redemption, and simulated payment recording—with full automatic rollback on any failure.
+* **Order Workflow State Machine:** Strict enforcement of valid order lifecycle stages:  
+  `Placed` ➔ `Preparing` ➔ `Ready` ➔ `Out for Delivery` / `Collected` ➔ `Completed` (or `Cancelled`).
+* **Order Tracking & Confirmation:** Visual real-time order status timeline for customers and printable order invoice/receipt.
+* **Kitchen Order Queue:** Dedicated live console for kitchen staff to transition orders through their fulfillment stages.
+* **Sales & Business Analytics:** Administrative reporting with customizable date range filters, total revenue, orders by status, and top-selling dishes using SQL aggregates (`JOIN`, `GROUP BY`, `SUM`, `COUNT`).

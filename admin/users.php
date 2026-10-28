@@ -20,17 +20,18 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/csrf.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// Route guard: Administrator only
+// Route guard: Administrator only (Enforces Role-Based Access Control)
 require_role('admin');
 
 $currentAdminId = (int)$_SESSION['user_id'];
 
-// Fetch all available roles
+// Fetch all available roles for modal assignment
 $rolesStmt = $pdo->query("SELECT id, role_name FROM roles ORDER BY id ASC");
 $allRoles = $rolesStmt->fetchAll();
 
 // Handle POST: Add New User from Admin Dashboard
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_user') {
+    // Anti-CSRF verification
     if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
         set_flash('error', 'Security token expired. Please try again.');
         redirect(url('admin/users.php'));
@@ -47,12 +48,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         set_flash('error', 'Please fill in all required user fields.');
     } else {
         try {
-            // Check uniqueness
+            // Uniqueness validation check
             $checkStmt = $pdo->prepare("SELECT id FROM users WHERE username = :u OR email = :e LIMIT 1");
             $checkStmt->execute([':u' => $username, ':e' => $email]);
             if ($checkStmt->fetch()) {
                 set_flash('error', 'A user with that username or email already exists.');
             } else {
+                // Secure BCRYPT hashing for newly created accounts
                 $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
                 $ins = $pdo->prepare(
                     "INSERT INTO users (role_id, full_name, username, email, phone, address, password_hash, is_active, created_at)
@@ -89,6 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $targetUserId = (int)($_POST['user_id'] ?? 0);
     $newStatus    = (int)($_POST['new_status'] ?? 0);
 
+    // SECURITY SAFEGUARD: Self-Lockout Prevention
+    // Prevents an administrator from deactivating their own active account,
+    // which would cause an irreversible administrative lockout of the system.
     if ($targetUserId === $currentAdminId) {
         set_flash('error', 'Security Violation: You cannot deactivate your own administrative account.');
         redirect(url('admin/users.php'));
@@ -125,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $targetUserId = (int)($_POST['user_id'] ?? 0);
     $newRoleId    = (int)($_POST['new_role_id'] ?? 0);
 
+    // SECURITY SAFEGUARD: Self-Demotion Prevention
+    // Prevents the active administrator from accidentally revoking their own admin privileges.
     if ($targetUserId === $currentAdminId && $newRoleId !== 1) {
         set_flash('error', 'Security Violation: You cannot remove your own administrative privileges.');
         redirect(url('admin/users.php'));
@@ -195,6 +202,8 @@ $page    = max(1, (int)($_GET['page'] ?? 1));
 $perPage = 8; // Exactly 8 rows per page as depicted in Figma!
 $offset  = ($page - 1) * $perPage;
 
+// Dynamic Query Filtering & Server-side Pagination
+// Whitelisted clauses and PDO parameter binding ensure complete protection against SQL Injection
 $whereClauses = [];
 $params = [];
 
@@ -215,13 +224,14 @@ if ($filterStatus !== '') {
 
 $whereSql = !empty($whereClauses) ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
 
+// 1. Calculate total records for pagination ceiling
 $countSql = "SELECT COUNT(*) FROM users u JOIN roles r ON u.role_id = r.id {$whereSql}";
 $countStmt = $pdo->prepare($countSql);
 $countStmt->execute($params);
 $totalRows = (int)$countStmt->fetchColumn();
 $totalPages = max(1, (int)ceil($totalRows / $perPage));
 
-// Data query joining latest login attempt time if any
+// 2. Fetch paginated records with subquery for last authenticated login timestamp
 $dataSql = "SELECT u.id, u.role_id, u.full_name, u.username, u.email, u.phone, u.is_active, u.created_at, r.role_name,
             (SELECT attempted_at FROM login_attempts WHERE username = u.username AND is_successful = 1 ORDER BY attempted_at DESC LIMIT 1) as last_login
             FROM users u

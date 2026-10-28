@@ -24,6 +24,8 @@ $token = trim((string)($_GET['token'] ?? ''));
 $validResetRecord = null;
 
 // If a token is provided in the URL, validate it
+// SECURITY: Tokens are stored hashed in the database using SHA-256.
+// Even in the event of a database compromise, plaintext recovery tokens cannot be stolen.
 if ($token !== '') {
     $tokenHash = hash('sha256', $token);
     try {
@@ -37,6 +39,7 @@ if ($token !== '') {
         $stmt->execute([':hash' => $tokenHash]);
         $record = $stmt->fetch();
 
+        // 3-way validation: token exists, has not been used, and has not exceeded 1-hour expiration window
         if (!$record) {
             $error = 'The password reset token is invalid.';
         } elseif ((int)$record['is_used'] === 1) {

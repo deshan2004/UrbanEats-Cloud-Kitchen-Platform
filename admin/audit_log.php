@@ -3,6 +3,11 @@
  * UrbanEats Cloud Kitchen Platform
  * Component A: System Audit Log Viewer
  * 
+ * SECURITY & COMPLIANCE ROLE:
+ * Provides an immutable activity trail for non-repudiation and forensic incident response.
+ * Records authentication attempts, account state transitions, and privilege escalations
+ * with client IP addresses and user agents.
+ * 
  * Styled according to the official Figma Design System:
  * - Clean warm light theme
  * - Integrated filter toolbar
@@ -16,7 +21,7 @@ require_once __DIR__ . '/../includes/errors.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 
-// Route guard: Administrator only
+// Route guard: Administrator only (Enforces Role-Based Access Control)
 require_role('admin');
 
 $searchKeyword = trim((string)($_GET['q'] ?? ''));
