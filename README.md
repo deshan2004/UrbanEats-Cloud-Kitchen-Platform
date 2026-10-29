@@ -69,17 +69,17 @@ define('DB_PASS', ''); // Leave empty for default XAMPP, or enter your MySQL pas
 
 ---
 
-## 🔑 Test Login Accounts
+## 🔑 System User Roles & Access
 
-All pre-seeded test accounts use the common default password: **`Password123!`**
+The platform supports three distinct user roles governed by centralized Role-Based Access Control (RBAC):
 
-| Role | Username | Email | Testing Scope & Purpose |
-| :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` | `admin@urbaneats.lk` | Full system control, user activation/roles, audit log viewer, sales reports |
-| **Kitchen Staff** | `chef_kasun` | `kasun@urbaneats.lk` | Kitchen queue order processing, menu management, stock adjustments |
-| **Kitchen Staff** | `chef_dilan` | `dilan@urbaneats.lk` | Order workflow updates, inventory restock and wastage logging |
-| **Customer** | `anuki99` | `anuki.f@gmail.com` | Menu browsing, cart management, coupon checkout, order tracking |
-| **Customer** | `kavindu_j` | `kavindu.j@outlook.com` | Customer order history, invoice download/print, profile edit |
+| Role | Access Scope & Operational Capabilities |
+| :--- | :--- |
+| **Administrator** | Full system control, user role modification, account activation/deactivation, audit trail inspection, and executive sales reports. |
+| **Kitchen Staff** | Live kitchen order queue fulfillment, menu catalog CRUD, stock adjustment logging, and inventory monitoring. |
+| **Customer** | Menu browsing, session-based cart management, coupon checkout, real-time order tracking, and printable receipts. |
+
+> **Note:** Initial seed accounts for development and evaluation are populated via `database/urbaneats_db.sql`. New customer accounts can also be created anytime through the public registration interface (`/auth/register.php`).
 
 ---
 
