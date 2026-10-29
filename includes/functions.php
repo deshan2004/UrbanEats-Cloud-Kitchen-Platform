@@ -424,30 +424,28 @@ function upload_dish_image(array $file): array {
         return ['success' => false, 'path' => null, 'error' => 'Only JPG, JPEG, PNG, and WEBP image formats are supported.'];
     }
 
-    // 3. Real binary MIME-type check (finfo)
+    // 3. Real binary MIME-type check (finfo inspection)
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $realMime = $finfo->file($file['tmp_name']);
     $allowedMimes = [
-        'jpg'  => 'image/jpeg',
-        'jpeg' => 'image/jpeg',
-        'png'  => 'image/png',
-        'webp' => 'image/webp',
+        'image/jpeg'   => 'jpg',
+        'image/pjpeg'  => 'jpg',
+        'image/png'    => 'png',
+        'image/x-png'  => 'png',
+        'image/webp'   => 'webp',
     ];
 
-    if (!in_array($realMime, array_values($allowedMimes), true)) {
-        return ['success' => false, 'path' => null, 'error' => 'File contents do not match a valid image MIME type.'];
+    if (!isset($allowedMimes[$realMime])) {
+        return ['success' => false, 'path' => null, 'error' => 'File contents do not match a valid image format (JPEG, PNG, WEBP).'];
     }
 
-    // Verify extension matches real MIME
-    $expectedMime = $allowedMimes[$extension] ?? '';
-    if ($expectedMime !== $realMime) {
-        return ['success' => false, 'path' => null, 'error' => 'File extension does not correspond with genuine binary format.'];
-    }
+    // Normalize extension strictly to the genuine binary payload type to guarantee security & compatibility
+    $extension = $allowedMimes[$realMime];
 
     // 4. Secure random filename generation
     $targetDir = dirname(__DIR__) . '/public/uploads';
     if (!is_dir($targetDir)) {
-        mkdir($targetDir, 0755, true);
+        mkdir($targetDir, 0777, true);
     }
 
     $uniqueName = 'dish_' . bin2hex(random_bytes(10)) . '.' . $extension;

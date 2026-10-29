@@ -133,14 +133,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Record initial stock movement
             if ($initialQty > 0) {
+                // Use distinct parameter markers for native prepared statements to prevent SQLSTATE[HY093]
                 $movInsert = $pdo->prepare(
                     "INSERT INTO stock_movements (dish_id, user_id, movement_type, quantity_change, previous_quantity, new_quantity, reason, created_at)
-                     VALUES (:dish_id, :user_id, 'restock', :qty, 0, :qty, 'Initial stock entry on dish creation', NOW())"
+                     VALUES (:dish_id, :user_id, 'restock', :qty_change, 0, :new_qty, 'Initial stock entry on dish creation', NOW())"
                 );
                 $movInsert->execute([
-                    ':dish_id' => $newDishId,
-                    ':user_id' => $userId,
-                    ':qty'     => $initialQty,
+                    ':dish_id'    => $newDishId,
+                    ':user_id'    => $userId,
+                    ':qty_change' => $initialQty,
+                    ':new_qty'    => $initialQty,
                 ]);
             }
 
